@@ -1,19 +1,26 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, Building2, Heart, Search } from 'lucide-react';
+import { Menu, X, User, Building2, Heart, Search, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { href: '/search', label: 'Find Hospitals', icon: Search },
     { href: '/favorites', label: 'Favorites', icon: Heart },
     { href: '/dashboard', label: 'Hospital Portal', icon: Building2 },
   ];
+
+  const handleSignOut = async () => {
+    await signOut();
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <header className={cn(
@@ -62,23 +69,44 @@ export function Header() {
 
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button 
-              variant={isHomePage ? "outline-card" : "ghost"}
-              size="sm"
-              asChild
-            >
-              <Link to="/login">
-                <User className="w-4 h-4 mr-2" />
-                Login
-              </Link>
-            </Button>
-            <Button 
-              variant={isHomePage ? "hero" : "default"}
-              size="sm"
-              asChild
-            >
-              <Link to="/register">Sign Up</Link>
-            </Button>
+            {user ? (
+              <>
+                <span className={cn(
+                  "text-sm",
+                  isHomePage ? "text-card/80" : "text-muted-foreground"
+                )}>
+                  {user.email}
+                </span>
+                <Button 
+                  variant={isHomePage ? "outline-card" : "ghost"}
+                  size="sm"
+                  onClick={handleSignOut}
+                >
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant={isHomePage ? "outline-card" : "ghost"}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/auth">
+                    <User className="w-4 h-4 mr-2" />
+                    Login
+                  </Link>
+                </Button>
+                <Button 
+                  variant={isHomePage ? "hero" : "default"}
+                  size="sm"
+                  asChild
+                >
+                  <Link to="/auth">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -115,12 +143,21 @@ export function Header() {
               ))}
               <hr className={cn("my-3", isHomePage ? "border-card/20" : "border-border")} />
               <div className="flex gap-2 px-4">
-                <Button variant="outline" size="sm" className="flex-1" asChild>
-                  <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
-                </Button>
-                <Button size="sm" className="flex-1" asChild>
-                  <Link to="/register" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
-                </Button>
+                {user ? (
+                  <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                      <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+                    </Button>
+                    <Button size="sm" className="flex-1" asChild>
+                      <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
