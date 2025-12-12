@@ -10,6 +10,7 @@ import HospitalProfile from "./pages/HospitalProfile";
 import Favorites from "./pages/Favorites";
 import Dashboard from "./pages/Dashboard";
 import Auth from "./pages/Auth";
+import MyBookings from "./pages/MyBookings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
