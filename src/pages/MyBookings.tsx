@@ -88,6 +88,16 @@ export default function MyBookings() {
     }
   };
 
+  const getHospitalName = (hospitalId: string) => {
+    const hospital = mockHospitals.find(h => h.id === hospitalId);
+    return hospital?.name || 'Unknown Hospital';
+  };
+
+  const getHospitalLocation = (hospitalId: string) => {
+    const hospital = mockHospitals.find(h => h.id === hospitalId);
+    return hospital ? `${hospital.city}, ${hospital.district}` : '';
+  };
+
   const handleCancelBooking = async () => {
     if (!selectedBooking) return;
     
@@ -100,9 +110,24 @@ export default function MyBookings() {
 
       if (error) throw error;
 
+      // Send cancellation email notification
+      const hospitalName = getHospitalName(selectedBooking.hospital_id);
+      await supabase.functions.invoke('send-booking-update', {
+        body: {
+          patientName: selectedBooking.patient_name,
+          patientEmail: selectedBooking.patient_email,
+          hospitalName,
+          bookingType: selectedBooking.booking_type,
+          originalDate: selectedBooking.scheduled_date,
+          originalTime: selectedBooking.scheduled_time,
+          bookingId: selectedBooking.id,
+          updateType: 'cancelled'
+        }
+      });
+
       toast({
         title: "Booking cancelled",
-        description: "Your booking has been successfully cancelled.",
+        description: "Your booking has been cancelled. A confirmation email has been sent.",
       });
 
       setBookings(prev => 
@@ -124,6 +149,9 @@ export default function MyBookings() {
   const handleRescheduleBooking = async () => {
     if (!selectedBooking || !newDate || !newTime) return;
     
+    const originalDate = selectedBooking.scheduled_date;
+    const originalTime = selectedBooking.scheduled_time;
+    
     setActionLoading(true);
     try {
       const { error } = await supabase
@@ -137,9 +165,26 @@ export default function MyBookings() {
 
       if (error) throw error;
 
+      // Send reschedule email notification
+      const hospitalName = getHospitalName(selectedBooking.hospital_id);
+      await supabase.functions.invoke('send-booking-update', {
+        body: {
+          patientName: selectedBooking.patient_name,
+          patientEmail: selectedBooking.patient_email,
+          hospitalName,
+          bookingType: selectedBooking.booking_type,
+          originalDate,
+          originalTime,
+          newDate: format(newDate, 'yyyy-MM-dd'),
+          newTime,
+          bookingId: selectedBooking.id,
+          updateType: 'rescheduled'
+        }
+      });
+
       toast({
         title: "Booking rescheduled",
-        description: `Your booking has been rescheduled to ${format(newDate, 'MMMM d, yyyy')} at ${newTime}.`,
+        description: `Your booking has been rescheduled. A confirmation email has been sent.`,
       });
 
       setBookings(prev => 
@@ -175,15 +220,6 @@ export default function MyBookings() {
     setRescheduleDialogOpen(true);
   };
 
-  const getHospitalName = (hospitalId: string) => {
-    const hospital = mockHospitals.find(h => h.id === hospitalId);
-    return hospital?.name || 'Unknown Hospital';
-  };
-
-  const getHospitalLocation = (hospitalId: string) => {
-    const hospital = mockHospitals.find(h => h.id === hospitalId);
-    return hospital ? `${hospital.city}, ${hospital.district}` : '';
-  };
 
   const getStatusBadge = (status: string, date: string) => {
     const isDatePast = isPast(parseISO(date));
