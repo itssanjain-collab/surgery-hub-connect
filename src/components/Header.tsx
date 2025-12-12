@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, Building2, Heart, Search, LogOut } from 'lucide-react';
+import { Menu, X, User, Building2, Heart, Search, LogOut, CalendarDays } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
@@ -14,6 +14,7 @@ export function Header() {
   const navLinks = [
     { href: '/search', label: 'Find Hospitals', icon: Search },
     { href: '/favorites', label: 'Favorites', icon: Heart },
+    { href: '/my-bookings', label: 'My Bookings', icon: CalendarDays, authRequired: true },
     { href: '/dashboard', label: 'Hospital Portal', icon: Building2 },
   ];
 
@@ -49,7 +50,9 @@ export function Header() {
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center gap-6">
-            {navLinks.map((link) => (
+            {navLinks
+              .filter(link => !link.authRequired || user)
+              .map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
@@ -124,7 +127,9 @@ export function Header() {
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-border/50 animate-fade-in">
             <div className="space-y-2">
-              {navLinks.map((link) => (
+              {navLinks
+                .filter(link => !link.authRequired || user)
+                .map((link) => (
                 <Link
                   key={link.href}
                   to={link.href}
