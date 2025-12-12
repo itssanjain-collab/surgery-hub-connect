@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ArrowLeft, Mail, CheckCircle2 } from 'lucide-react';
 import { z } from 'zod';
 
 const emailSchema = z.string().trim().email({ message: "Invalid email address" });
@@ -34,28 +34,63 @@ const GoogleIcon = () => (
   </svg>
 );
 
+type AuthMode = 'login' | 'signup' | 'forgot' | 'reset';
+
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams] = useSearchParams();
+  const urlMode = searchParams.get('mode');
+  
+  const [mode, setMode] = useState<AuthMode>(urlMode === 'reset' ? 'reset' : 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; confirmPassword?: string }>({});
 
-  const { signIn, signUp, signInWithGoogle, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    if (user) {
+    if (user && mode !== 'reset') {
       navigate('/');
     }
-  }, [user, navigate]);
+  }, [user, navigate, mode]);
+
+  useEffect(() => {
+    if (urlMode === 'reset') {
+      setMode('reset');
+    }
+  }, [urlMode]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
+
+    if (mode === 'forgot') {
+      const emailResult = emailSchema.safeParse(email);
+      if (!emailResult.success) {
+        newErrors.email = emailResult.error.issues[0].message;
+      }
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    }
+
+    if (mode === 'reset') {
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        newErrors.password = passwordResult.error.issues[0].message;
+      }
+      if (password !== confirmPassword) {
+        newErrors.confirmPassword = "Passwords do not match";
+      }
+      setErrors(newErrors);
+      return Object.keys(newErrors).length === 0;
+    }
 
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
@@ -67,7 +102,7 @@ export default function Auth() {
       newErrors.password = passwordResult.error.issues[0].message;
     }
 
-    if (!isLogin) {
+    if (mode === 'signup') {
       const nameResult = nameSchema.safeParse(fullName);
       if (!nameResult.success) {
         newErrors.name = nameResult.error.issues[0].message;
@@ -86,7 +121,33 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
+      if (mode === 'forgot') {
+        const { error } = await resetPassword(email);
+        if (error) {
+          toast({
+            title: "Reset failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          setResetEmailSent(true);
+        }
+      } else if (mode === 'reset') {
+        const { error } = await updatePassword(password);
+        if (error) {
+          toast({
+            title: "Password update failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Password updated!",
+            description: "Your password has been successfully changed.",
+          });
+          navigate('/');
+        }
+      } else if (mode === 'login') {
         const { error } = await signIn(email, password);
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
@@ -166,6 +227,52 @@ export default function Auth() {
     }
   };
 
+  const switchMode = (newMode: AuthMode) => {
+    setMode(newMode);
+    setErrors({});
+    setResetEmailSent(false);
+  };
+
+  const getTitle = () => {
+    switch (mode) {
+      case 'login': return 'Welcome back';
+      case 'signup': return 'Create account';
+      case 'forgot': return 'Reset password';
+      case 'reset': return 'Set new password';
+    }
+  };
+
+  const getDescription = () => {
+    switch (mode) {
+      case 'login': return 'Enter your credentials to access your account';
+      case 'signup': return 'Fill in your details to get started';
+      case 'forgot': return 'Enter your email and we\'ll send you a reset link';
+      case 'reset': return 'Enter your new password below';
+    }
+  };
+
+  // Reset email sent success state
+  if (resetEmailSent) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="w-full max-w-md text-center">
+          <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-8 h-8 text-success" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground mb-2">Check your email</h2>
+          <p className="text-muted-foreground mb-6">
+            We've sent a password reset link to <strong>{email}</strong>. 
+            Please check your inbox and click the link to reset your password.
+          </p>
+          <Button variant="outline" onClick={() => switchMode('login')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to login
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex">
       {/* Left Panel - Decorative */}
@@ -196,44 +303,46 @@ export default function Auth() {
 
           <div className="mb-8">
             <h2 className="text-3xl font-bold text-foreground mb-2">
-              {isLogin ? 'Welcome back' : 'Create account'}
+              {getTitle()}
             </h2>
             <p className="text-muted-foreground">
-              {isLogin 
-                ? 'Enter your credentials to access your account' 
-                : 'Fill in your details to get started'}
+              {getDescription()}
             </p>
           </div>
 
-          {/* Google Sign In Button */}
-          <Button
-            type="button"
-            variant="outline"
-            className="w-full mb-6"
-            size="lg"
-            onClick={handleGoogleSignIn}
-            disabled={googleLoading || loading}
-          >
-            {googleLoading ? (
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-            ) : (
-              <GoogleIcon />
-            )}
-            <span className="ml-2">Continue with Google</span>
-          </Button>
+          {/* Google Sign In Button - only show for login/signup */}
+          {(mode === 'login' || mode === 'signup') && (
+            <>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full mb-6"
+                size="lg"
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading || loading}
+              >
+                {googleLoading ? (
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                <span className="ml-2">Continue with Google</span>
+              </Button>
 
-          {/* Divider */}
-          <div className="relative mb-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-background px-4 text-muted-foreground">or continue with email</span>
-            </div>
-          </div>
+              {/* Divider */}
+              <div className="relative mb-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="bg-background px-4 text-muted-foreground">or continue with email</span>
+                </div>
+              </div>
+            </>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {!isLogin && (
+            {mode === 'signup' && (
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
@@ -250,64 +359,134 @@ export default function Auth() {
               </div>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className={errors.email ? "border-destructive" : ""}
-              />
-              {errors.email && (
-                <p className="text-sm text-destructive">{errors.email}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
+            {(mode === 'login' || mode === 'signup' || mode === 'forgot') && (
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={errors.email ? "border-destructive" : ""}
                 />
+                {errors.email && (
+                  <p className="text-sm text-destructive">{errors.email}</p>
+                )}
+              </div>
+            )}
+
+            {(mode === 'login' || mode === 'signup' || mode === 'reset') && (
+              <div className="space-y-2">
+                <Label htmlFor="password">{mode === 'reset' ? 'New Password' : 'Password'}</Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={errors.password ? "border-destructive pr-10" : "pr-10"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
+              </div>
+            )}
+
+            {mode === 'reset' && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={errors.confirmPassword ? "border-destructive pr-10" : "pr-10"}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                )}
+              </div>
+            )}
+
+            {mode === 'login' && (
+              <div className="text-right">
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  onClick={() => switchMode('forgot')}
+                  className="text-sm text-primary hover:underline"
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  Forgot password?
                 </button>
               </div>
-              {errors.password && (
-                <p className="text-sm text-destructive">{errors.password}</p>
-              )}
-            </div>
+            )}
 
             <Button type="submit" className="w-full" size="lg" disabled={loading || googleLoading}>
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {isLogin ? 'Sign In' : 'Create Account'}
+              {mode === 'login' && 'Sign In'}
+              {mode === 'signup' && 'Create Account'}
+              {mode === 'forgot' && 'Send Reset Link'}
+              {mode === 'reset' && 'Update Password'}
             </Button>
           </form>
 
-          <p className="text-center text-muted-foreground mt-6">
-            {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
-            <button
-              type="button"
-              onClick={() => {
-                setIsLogin(!isLogin);
-                setErrors({});
-              }}
-              className="text-primary font-medium hover:underline"
-            >
-              {isLogin ? 'Sign up' : 'Sign in'}
-            </button>
-          </p>
+          {mode === 'login' && (
+            <p className="text-center text-muted-foreground mt-6">
+              Don't have an account?{' '}
+              <button
+                type="button"
+                onClick={() => switchMode('signup')}
+                className="text-primary font-medium hover:underline"
+              >
+                Sign up
+              </button>
+            </p>
+          )}
+
+          {mode === 'signup' && (
+            <p className="text-center text-muted-foreground mt-6">
+              Already have an account?{' '}
+              <button
+                type="button"
+                onClick={() => switchMode('login')}
+                className="text-primary font-medium hover:underline"
+              >
+                Sign in
+              </button>
+            </p>
+          )}
+
+          {mode === 'forgot' && (
+            <p className="text-center text-muted-foreground mt-6">
+              Remember your password?{' '}
+              <button
+                type="button"
+                onClick={() => switchMode('login')}
+                className="text-primary font-medium hover:underline"
+              >
+                Back to login
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>
