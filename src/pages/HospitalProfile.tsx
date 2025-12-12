@@ -3,8 +3,9 @@ import { useParams, Link } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { DoctorCard } from '@/components/DoctorCard';
+import { BookingModal } from '@/components/BookingModal';
 import { mockHospitals, mockReviews } from '@/data/mockData';
-import { SURGERY_TYPES } from '@/types';
+import { SURGERY_TYPES, Doctor, Surgery } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
@@ -18,6 +19,10 @@ export default function HospitalProfile() {
   const hospital = mockHospitals.find(h => h.id === id) || mockHospitals[0];
   const [isFavorited, setIsFavorited] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>();
+  const [selectedSurgery, setSelectedSurgery] = useState<Surgery | undefined>();
+  const [bookingType, setBookingType] = useState<'consultation' | 'surgery' | 'visit'>('consultation');
 
   const allImages = [hospital.imageUrl, ...hospital.galleryImages];
   const reviews = mockReviews.filter(r => r.hospitalId === hospital.id);
@@ -150,7 +155,7 @@ export default function HospitalProfile() {
                 </div>
               </div>
               <div className="space-y-3">
-                <Button className="w-full gap-2" size="lg">
+                <Button className="w-full gap-2" size="lg" onClick={() => { setBookingType('consultation'); setBookingOpen(true); }}>
                   <Calendar className="w-5 h-5" />
                   Book Consultation
                 </Button>
@@ -368,6 +373,15 @@ export default function HospitalProfile() {
       </main>
 
       <Footer />
+
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => { setBookingOpen(false); setSelectedDoctor(undefined); setSelectedSurgery(undefined); }}
+        hospital={hospital}
+        doctor={selectedDoctor}
+        surgery={selectedSurgery}
+        bookingType={bookingType}
+      />
     </div>
   );
 }

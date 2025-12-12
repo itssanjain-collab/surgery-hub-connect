@@ -14,7 +14,93 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          booking_type: string
+          confirmation_sent: boolean | null
+          created_at: string
+          doctor_id: string | null
+          hospital_id: string
+          id: string
+          notes: string | null
+          patient_email: string
+          patient_name: string
+          patient_phone: string | null
+          scheduled_date: string
+          scheduled_time: string
+          status: string
+          surgery_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          booking_type: string
+          confirmation_sent?: boolean | null
+          created_at?: string
+          doctor_id?: string | null
+          hospital_id: string
+          id?: string
+          notes?: string | null
+          patient_email: string
+          patient_name: string
+          patient_phone?: string | null
+          scheduled_date: string
+          scheduled_time: string
+          status?: string
+          surgery_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          booking_type?: string
+          confirmation_sent?: boolean | null
+          created_at?: string
+          doctor_id?: string | null
+          hospital_id?: string
+          id?: string
+          notes?: string | null
+          patient_email?: string
+          patient_name?: string
+          patient_phone?: string | null
+          scheduled_date?: string
+          scheduled_time?: string
+          status?: string
+          surgery_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
