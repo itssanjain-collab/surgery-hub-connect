@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, User, Building2, Heart, Search, LogOut, CalendarDays } from 'lucide-react';
+import { Menu, X, User, Building2, Heart, Search, LogOut, CalendarDays, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -73,22 +80,40 @@ export function Header() {
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
-              <>
-                <span className={cn(
-                  "text-sm",
-                  isHomePage ? "text-card/80" : "text-muted-foreground"
-                )}>
-                  {user.email}
-                </span>
-                <Button 
-                  variant={isHomePage ? "outline-card" : "ghost"}
-                  size="sm"
-                  onClick={handleSignOut}
-                >
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
-              </>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant={isHomePage ? "outline-card" : "outline"}
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <UserCircle className="w-4 h-4" />
+                    <span className="max-w-[150px] truncate">{user.email}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/my-bookings" className="flex items-center gap-2 cursor-pointer">
+                      <CalendarDays className="w-4 h-4" />
+                      My Bookings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleSignOut}
+                    className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <>
                 <Button 
@@ -147,7 +172,23 @@ export function Header() {
                 </Link>
               ))}
               <hr className={cn("my-3", isHomePage ? "border-card/20" : "border-border")} />
-              <div className="flex gap-2 px-4">
+              {user && (
+                <Link
+                  to="/profile"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    isHomePage 
+                      ? "text-card hover:bg-card/10" 
+                      : "text-foreground hover:bg-muted",
+                    location.pathname === '/profile' && "bg-primary/10 text-primary"
+                  )}
+                >
+                  <User className="w-5 h-5" />
+                  My Profile
+                </Link>
+              )}
+              <div className="flex gap-2 px-4 mt-2">
                 {user ? (
                   <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
                     <LogOut className="w-4 h-4 mr-2" />
