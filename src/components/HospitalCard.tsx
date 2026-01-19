@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Hospital, SURGERY_TYPES } from '@/types';
 import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
+import { BookingModal } from './BookingModal';
 
 interface HospitalCardProps {
   hospital: Hospital;
@@ -27,7 +28,7 @@ export function HospitalCard({
 }: HospitalCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-
+  const [bookingOpen, setBookingOpen] = useState(false);
   const minCost = Math.min(...hospital.surgeries.map(s => s.minCost));
   const maxCost = Math.max(...hospital.surgeries.map(s => s.maxCost));
 
@@ -175,7 +176,12 @@ export function HospitalCard({
                 <Phone className="w-4 h-4" />
                 <span className="hidden sm:inline">Call</span>
               </Button>
-              <Button variant="outline" size="sm" className="gap-1.5">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-1.5"
+                onClick={() => setBookingOpen(true)}
+              >
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">Book</span>
               </Button>
@@ -189,6 +195,13 @@ export function HospitalCard({
           </div>
         </div>
       </div>
+
+      <BookingModal
+        isOpen={bookingOpen}
+        onClose={() => setBookingOpen(false)}
+        hospital={hospital}
+        bookingType="consultation"
+      />
     </article>
   );
 }
