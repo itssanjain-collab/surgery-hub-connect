@@ -268,7 +268,15 @@ export default function HospitalProfile() {
             <TabsContent value="doctors">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {hospital.doctors.map((doctor) => (
-                  <DoctorCard key={doctor.id} doctor={doctor} />
+                  <DoctorCard 
+                    key={doctor.id} 
+                    doctor={doctor}
+                    onBookClick={(doc) => {
+                      setSelectedDoctor(doc);
+                      setBookingType('consultation');
+                      setBookingOpen(true);
+                    }}
+                  />
                 ))}
               </div>
             </TabsContent>
