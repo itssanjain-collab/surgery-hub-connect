@@ -39,9 +39,9 @@ export function Footer() {
               {[
                 { label: 'Find Hospitals', href: '/search' },
                 { label: 'Compare Costs', href: '/search' },
-                { label: 'For Hospitals', href: '/dashboard' },
+                { label: 'Hospital Registration', href: '/hospital-register' },
+                { label: 'Hospital Portal', href: '/dashboard' },
                 { label: 'About Us', href: '/about' },
-                { label: 'Contact', href: '/contact' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link

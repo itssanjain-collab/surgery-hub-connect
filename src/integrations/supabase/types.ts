@@ -71,6 +71,87 @@ export type Database = {
         }
         Relationships: []
       }
+      hospitals: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          bed_count: number | null
+          city: string
+          contact_email: string
+          contact_phone: string
+          created_at: string
+          description: string | null
+          established_year: number | null
+          gallery_images: string[] | null
+          id: string
+          image_url: string | null
+          is_accredited: boolean | null
+          is_active: boolean | null
+          is_verified: boolean | null
+          name: string
+          rating: number | null
+          region: string
+          review_count: number | null
+          specialties: string[] | null
+          tagline: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          bed_count?: number | null
+          city: string
+          contact_email: string
+          contact_phone: string
+          created_at?: string
+          description?: string | null
+          established_year?: number | null
+          gallery_images?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_accredited?: boolean | null
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          name: string
+          rating?: number | null
+          region: string
+          review_count?: number | null
+          specialties?: string[] | null
+          tagline?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          bed_count?: number | null
+          city?: string
+          contact_email?: string
+          contact_phone?: string
+          created_at?: string
+          description?: string | null
+          established_year?: number | null
+          gallery_images?: string[] | null
+          id?: string
+          image_url?: string | null
+          is_accredited?: boolean | null
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          name?: string
+          rating?: number | null
+          region?: string
+          review_count?: number | null
+          specialties?: string[] | null
+          tagline?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -104,15 +185,42 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "user" | "hospital" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -239,6 +347,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["user", "hospital", "admin"],
+    },
   },
 } as const

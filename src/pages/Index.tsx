@@ -72,7 +72,8 @@ const Index = () => {
               <h2 className="text-3xl md:text-4xl font-bold text-card mb-6">Are You a Hospital Administrator?</h2>
               <p className="text-lg text-card/80 mb-8">Join Surgery Hub to list your hospital and reach more patients across Karnataka.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" variant="hero"><Link to="/dashboard">Register Your Hospital</Link></Button>
+                <Button asChild size="lg" variant="hero"><Link to="/hospital-register">Register Your Hospital</Link></Button>
+                <Button asChild size="lg" variant="outline-card"><Link to="/dashboard">Hospital Login</Link></Button>
               </div>
             </div>
           </div>
