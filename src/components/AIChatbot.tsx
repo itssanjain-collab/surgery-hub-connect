@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User, Loader2, X, MessageCircle } from 'lucide-react';
+import { Send, Bot, User, Loader2, X, MessageCircle, Calendar, Stethoscope, HelpCircle, Building2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Message = {
@@ -11,6 +11,13 @@ type Message = {
 };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
+const QUICK_REPLIES = [
+  { label: 'What surgeries do you offer?', icon: Stethoscope },
+  { label: 'How do I book a consultation?', icon: Calendar },
+  { label: 'How to find the right hospital?', icon: Building2 },
+  { label: 'What should I ask my surgeon?', icon: HelpCircle },
+];
 
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -97,11 +104,10 @@ export function AIChatbot() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || isLoading) return;
+  const sendMessage = async (content: string) => {
+    if (isLoading) return;
 
-    const userMessage: Message = { role: 'user', content: input.trim() };
+    const userMessage: Message = { role: 'user', content };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
     setInput('');
@@ -121,6 +127,16 @@ export function AIChatbot() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+    sendMessage(input.trim());
+  };
+
+  const handleQuickReply = (text: string) => {
+    sendMessage(text);
   };
 
   return (
@@ -163,12 +179,27 @@ export function AIChatbot() {
         {/* Messages */}
         <ScrollArea className="h-[400px] p-4" ref={scrollRef}>
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
-              <Bot className="h-12 w-12 mb-3 opacity-50" />
-              <p className="text-sm font-medium">How can I help you today?</p>
-              <p className="text-xs mt-1">
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <Bot className="h-12 w-12 mb-3 text-muted-foreground opacity-50" />
+              <p className="text-sm font-medium text-foreground">How can I help you today?</p>
+              <p className="text-xs mt-1 text-muted-foreground mb-4">
                 Ask about surgeries, hospitals, or medical procedures
               </p>
+              <div className="flex flex-wrap gap-2 justify-center px-2">
+                {QUICK_REPLIES.map((reply) => (
+                  <Button
+                    key={reply.label}
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-auto py-2 px-3 gap-1.5"
+                    onClick={() => handleQuickReply(reply.label)}
+                    disabled={isLoading}
+                  >
+                    <reply.icon className="h-3.5 w-3.5" />
+                    {reply.label}
+                  </Button>
+                ))}
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
