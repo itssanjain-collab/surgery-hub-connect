@@ -51,6 +51,9 @@ export default function Dashboard() {
     consultationFee: '',
     bio: ''
   });
+  const [newDoctorAvailability, setNewDoctorAvailability] = useState<string[]>(['Mon', 'Wed', 'Fri']);
+
+  const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   // Photo upload state
   const [newDoctorPhoto, setNewDoctorPhoto] = useState<string | null>(null);
@@ -129,12 +132,30 @@ export default function Dashboard() {
         consultationFee: parseInt(newDoctor.consultationFee),
         rating: 4.5,
         reviewCount: 0,
-        availability: ['Mon', 'Wed', 'Fri'],
+        availability: newDoctorAvailability,
         bio: newDoctor.bio
       }]);
       setNewDoctor({ name: '', specialization: '', qualification: '', experience: '', consultationFee: '', bio: '' });
       setNewDoctorPhoto(null);
+      setNewDoctorAvailability(['Mon', 'Wed', 'Fri']);
       setIsAddDoctorModalOpen(false);
+    }
+  };
+
+  const toggleDay = (day: string, isEdit: boolean = false) => {
+    if (isEdit && editingDoctor) {
+      const currentAvailability = editingDoctor.availability || [];
+      if (currentAvailability.includes(day)) {
+        setEditingDoctor({ ...editingDoctor, availability: currentAvailability.filter(d => d !== day) });
+      } else {
+        setEditingDoctor({ ...editingDoctor, availability: [...currentAvailability, day] });
+      }
+    } else {
+      if (newDoctorAvailability.includes(day)) {
+        setNewDoctorAvailability(newDoctorAvailability.filter(d => d !== day));
+      } else {
+        setNewDoctorAvailability([...newDoctorAvailability, day]);
+      }
     }
   };
 
@@ -712,6 +733,28 @@ export default function Dashboard() {
                     rows={3}
                   />
                 </div>
+                {/* Availability Schedule */}
+                <div>
+                  <Label>Availability</Label>
+                  <p className="text-xs text-muted-foreground mb-2">Select days when the doctor is available</p>
+                  <div className="flex flex-wrap gap-2">
+                    {DAYS_OF_WEEK.map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => toggleDay(day, true)}
+                        className={cn(
+                          "px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                          (editingDoctor.availability || []).includes(day)
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                        )}
+                      >
+                        {day}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <div className="flex gap-3 pt-2">
                   <Button variant="outline" onClick={() => setIsDoctorEditModalOpen(false)} className="flex-1">
                     Cancel
@@ -849,6 +892,28 @@ export default function Dashboard() {
                   className="mt-1"
                   rows={3}
                 />
+              </div>
+              {/* Availability Schedule */}
+              <div>
+                <Label>Availability *</Label>
+                <p className="text-xs text-muted-foreground mb-2">Select days when the doctor is available</p>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map((day) => (
+                    <button
+                      key={day}
+                      type="button"
+                      onClick={() => toggleDay(day, false)}
+                      className={cn(
+                        "px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
+                        newDoctorAvailability.includes(day)
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      )}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={() => setIsAddDoctorModalOpen(false)} className="flex-1">
