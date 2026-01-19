@@ -275,6 +275,19 @@ export default function Auth() {
     }
   };
 
+  // Loading state for reset mode session verification
+  if (mode === 'reset' && authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-8">
+        <div className="w-full max-w-md text-center">
+          <Loader2 className="w-12 h-12 text-primary animate-spin mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-foreground mb-2">Verifying your link...</h2>
+          <p className="text-muted-foreground">Please wait while we verify your password reset link.</p>
+        </div>
+      </div>
+    );
+  }
+
   // Reset email sent success state
   if (resetEmailSent) {
     return (
