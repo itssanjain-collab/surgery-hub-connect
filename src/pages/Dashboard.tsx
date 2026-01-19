@@ -1040,13 +1040,12 @@ export default function Dashboard() {
                   })}
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-4">
                 <Button variant="outline" onClick={() => setIsAddDoctorModalOpen(false)} className="flex-1">
                   Cancel
                 </Button>
-                <Button onClick={handleAddDoctor} className="flex-1 gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Doctor
+                <Button onClick={handleAddDoctor} className="flex-1">
+                  Submit
                 </Button>
               </div>
             </div>
