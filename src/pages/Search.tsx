@@ -1,15 +1,16 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { SearchBar } from '@/components/SearchBar';
 import { HospitalCard } from '@/components/HospitalCard';
+import { HospitalMap } from '@/components/HospitalMap';
 import { FilterDrawer } from '@/components/FilterDrawer';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { mockHospitals } from '@/data/mockData';
 import { SearchFilters, SURGERY_TYPES, SurgeryType } from '@/types';
 import { Button } from '@/components/ui/button';
-import { ArrowUpDown, LayoutGrid, List, MapPin, X } from 'lucide-react';
+import { ArrowUpDown, LayoutGrid, List, MapPin, X, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const sortOptions = [
@@ -23,17 +24,32 @@ export default function SearchPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialSurgeryType = searchParams.get('surgeryType') as SurgeryType | undefined;
+  const isNearby = searchParams.get('nearby') === 'true';
+  const urlLat = searchParams.get('lat');
+  const urlLng = searchParams.get('lng');
 
   const [filters, setFilters] = useState<SearchFilters>({
     query: initialQuery,
     surgeryType: initialSurgeryType,
-    sortBy: 'best_match'
+    sortBy: isNearby ? 'nearest' : 'best_match'
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'map'>(isNearby ? 'map' : 'list');
   const [compareList, setCompareList] = useState<string[]>([]);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedHospitalId, setSelectedHospitalId] = useState<string | undefined>();
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+  // Set user location from URL params
+  useEffect(() => {
+    if (urlLat && urlLng) {
+      setUserLocation({
+        lat: parseFloat(urlLat),
+        lng: parseFloat(urlLng),
+      });
+    }
+  }, [urlLat, urlLng]);
 
   // Simulate filtering
   const filteredHospitals = useMemo(() => {
@@ -166,6 +182,7 @@ export default function SearchPage() {
                     "p-2 transition-colors",
                     viewMode === 'list' ? "bg-primary text-primary-foreground" : "hover:bg-muted"
                   )}
+                  title="List view"
                 >
                   <List className="w-4 h-4" />
                 </button>
@@ -175,8 +192,19 @@ export default function SearchPage() {
                     "p-2 transition-colors",
                     viewMode === 'grid' ? "bg-primary text-primary-foreground" : "hover:bg-muted"
                   )}
+                  title="Grid view"
                 >
                   <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => setViewMode('map')}
+                  className={cn(
+                    "p-2 transition-colors",
+                    viewMode === 'map' ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                  )}
+                  title="Map view"
+                >
+                  <Map className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -238,6 +266,42 @@ export default function SearchPage() {
           {isLoading ? (
             <div className="space-y-4">
               <SkeletonLoader variant="hospital-card" count={3} />
+            </div>
+          ) : viewMode === 'map' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Map View */}
+              <div className="lg:sticky lg:top-24 h-[500px] lg:h-[calc(100vh-120px)]">
+                <HospitalMap
+                  hospitals={filteredHospitals}
+                  userLocation={userLocation}
+                  selectedHospitalId={selectedHospitalId}
+                  onHospitalSelect={setSelectedHospitalId}
+                  className="h-full"
+                />
+              </div>
+              
+              {/* Hospital List alongside map */}
+              <div className="flex flex-col gap-4 max-h-[calc(100vh-120px)] overflow-y-auto">
+                {filteredHospitals.map((hospital, index) => (
+                  <div
+                    key={hospital.id}
+                    className={cn(
+                      "transition-all duration-200",
+                      selectedHospitalId === hospital.id && "ring-2 ring-primary rounded-xl"
+                    )}
+                    onClick={() => setSelectedHospitalId(hospital.id)}
+                  >
+                    <HospitalCard
+                      hospital={hospital}
+                      onCompare={handleCompare}
+                      onFavorite={handleFavorite}
+                      isCompareSelected={compareList.includes(hospital.id)}
+                      isFavorited={favorites.includes(hospital.id)}
+                      animationDelay={index * 50}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
             <div className={cn(
