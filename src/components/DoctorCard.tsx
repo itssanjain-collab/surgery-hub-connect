@@ -7,9 +7,10 @@ interface DoctorCardProps {
   doctor: Doctor;
   className?: string;
   variant?: 'default' | 'compact';
+  onBookClick?: (doctor: Doctor) => void;
 }
 
-export function DoctorCard({ doctor, className, variant = 'default' }: DoctorCardProps) {
+export function DoctorCard({ doctor, className, variant = 'default', onBookClick }: DoctorCardProps) {
   const isCompact = variant === 'compact';
 
   return (
@@ -73,7 +74,11 @@ export function DoctorCard({ doctor, className, variant = 'default' }: DoctorCar
                 <span className="text-xs text-muted-foreground">Consultation</span>
                 <p className="text-lg font-bold text-foreground">₹{doctor.consultationFee}</p>
               </div>
-              <Button size="sm" className="gap-1.5">
+              <Button 
+                size="sm" 
+                className="gap-1.5"
+                onClick={() => onBookClick?.(doctor)}
+              >
                 <Calendar className="w-4 h-4" />
                 Book
               </Button>

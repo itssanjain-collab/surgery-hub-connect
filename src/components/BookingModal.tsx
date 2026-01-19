@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,8 +11,8 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useToast } from '@/hooks/use-toast';
 import { Hospital, Doctor, Surgery } from '@/types';
-import { format, addDays, isBefore, startOfToday } from 'date-fns';
-import { Calendar as CalendarIcon, Clock, Loader2, CheckCircle2 } from 'lucide-react';
+import { format, addDays, isBefore, startOfToday, getDay } from 'date-fns';
+import { Calendar as CalendarIcon, Clock, Loader2, CheckCircle2, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BookingModalProps {
@@ -24,11 +24,43 @@ interface BookingModalProps {
   bookingType: 'consultation' | 'surgery' | 'visit';
 }
 
-const timeSlots = [
-  '09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
-  '12:00 PM', '02:00 PM', '02:30 PM', '03:00 PM', '03:30 PM', '04:00 PM',
-  '04:30 PM', '05:00 PM'
-];
+const TIME_SLOTS = {
+  morning: [
+    { time: '09:00 AM', label: 'Morning' },
+    { time: '09:30 AM', label: 'Morning' },
+    { time: '10:00 AM', label: 'Morning' },
+    { time: '10:30 AM', label: 'Morning' },
+    { time: '11:00 AM', label: 'Morning' },
+    { time: '11:30 AM', label: 'Morning' },
+  ],
+  afternoon: [
+    { time: '12:00 PM', label: 'Afternoon' },
+    { time: '02:00 PM', label: 'Afternoon' },
+    { time: '02:30 PM', label: 'Afternoon' },
+    { time: '03:00 PM', label: 'Afternoon' },
+    { time: '03:30 PM', label: 'Afternoon' },
+    { time: '04:00 PM', label: 'Afternoon' },
+    { time: '04:30 PM', label: 'Afternoon' },
+  ],
+  evening: [
+    { time: '05:00 PM', label: 'Evening' },
+    { time: '05:30 PM', label: 'Evening' },
+    { time: '06:00 PM', label: 'Evening' },
+    { time: '06:30 PM', label: 'Evening' },
+    { time: '07:00 PM', label: 'Evening' },
+    { time: '07:30 PM', label: 'Evening' },
+  ]
+};
+
+const DAY_MAP: Record<number, string> = {
+  0: 'Sun',
+  1: 'Mon',
+  2: 'Tue',
+  3: 'Wed',
+  4: 'Thu',
+  5: 'Fri',
+  6: 'Sat'
+};
 
 export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, bookingType }: BookingModalProps) {
   const { user } = useAuth();
@@ -36,6 +68,7 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
   const { toast } = useToast();
 
   const [step, setStep] = useState(1);
+  const [selectedDoctor, setSelectedDoctor] = useState<Doctor | undefined>(doctor);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [patientName, setPatientName] = useState('');
@@ -45,15 +78,55 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Get available time slots based on selected date and doctor
+  const availableTimeSlots = useMemo(() => {
+    if (!selectedDate || !selectedDoctor) {
+      // Return all slots if no doctor selected
+      return [...TIME_SLOTS.morning, ...TIME_SLOTS.afternoon, ...TIME_SLOTS.evening];
+    }
+
+    const dayOfWeek = getDay(selectedDate);
+    const dayName = DAY_MAP[dayOfWeek];
+    
+    // Check if doctor is available on this day
+    if (!selectedDoctor.availability.includes(dayName)) {
+      return [];
+    }
+
+    // For now, return all time slots for available days
+    // In a real app, you'd check the doctor's specific time slot preferences
+    return [...TIME_SLOTS.morning, ...TIME_SLOTS.afternoon, ...TIME_SLOTS.evening];
+  }, [selectedDate, selectedDoctor]);
+
+  // Check if a date is available for the selected doctor
+  const isDateAvailable = (date: Date): boolean => {
+    if (!selectedDoctor) return true;
+    const dayOfWeek = getDay(date);
+    const dayName = DAY_MAP[dayOfWeek];
+    return selectedDoctor.availability.includes(dayName);
+  };
+
+  const handleSelectDoctor = (doc: Doctor) => {
+    setSelectedDoctor(doc);
+    setSelectedDate(undefined);
+    setSelectedTime('');
+  };
+
   const handleNext = () => {
-    if (step === 1 && selectedDate && selectedTime) {
+    if (step === 1 && selectedDoctor) {
       setStep(2);
+    } else if (step === 2 && selectedDate && selectedTime) {
+      setStep(3);
     }
   };
 
   const handleBack = () => {
     if (step === 2) {
       setStep(1);
+      setSelectedDate(undefined);
+      setSelectedTime('');
+    } else if (step === 3) {
+      setStep(2);
     }
   };
 
@@ -86,7 +159,7 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
         .insert({
           user_id: user.id,
           hospital_id: hospital.id,
-          doctor_id: doctor?.id || null,
+          doctor_id: selectedDoctor?.id || null,
           surgery_id: surgery?.id || null,
           booking_type: bookingType,
           scheduled_date: format(selectedDate, 'yyyy-MM-dd'),
@@ -108,7 +181,7 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
           patientName,
           patientEmail,
           hospitalName: hospital.name,
-          doctorName: doctor?.name,
+          doctorName: selectedDoctor?.name,
           surgeryName: surgery?.name,
           bookingType,
           scheduledDate: format(selectedDate, 'yyyy-MM-dd'),
@@ -149,6 +222,7 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
 
   const handleClose = () => {
     setStep(1);
+    setSelectedDoctor(doctor);
     setSelectedDate(undefined);
     setSelectedTime('');
     setPatientName('');
@@ -197,7 +271,8 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">Booking Confirmed!</h3>
             <p className="text-muted-foreground mb-6">
-              Your {bookingTypeLabels[bookingType].toLowerCase()} at {hospital.name} has been booked for{' '}
+              Your {bookingTypeLabels[bookingType].toLowerCase()} at {hospital.name} 
+              {selectedDoctor && ` with ${selectedDoctor.name}`} has been booked for{' '}
               {selectedDate && format(selectedDate, 'MMMM d, yyyy')} at {selectedTime}.
             </p>
             <p className="text-sm text-muted-foreground mb-6">
@@ -220,7 +295,7 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
             Book {bookingTypeLabels[bookingType]} at {hospital.name}
           </DialogTitle>
           <DialogDescription>
-            {doctor && `With ${doctor.name}`}
+            {selectedDoctor && `With ${selectedDoctor.name}`}
             {surgery && ` for ${surgery.name}`}
           </DialogDescription>
         </DialogHeader>
@@ -233,19 +308,110 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
           )}>
             1
           </div>
-          <div className={cn("w-12 h-1 rounded", step >= 2 ? "bg-primary" : "bg-muted")} />
+          <div className={cn("w-8 h-1 rounded", step >= 2 ? "bg-primary" : "bg-muted")} />
           <div className={cn(
             "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
             step >= 2 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           )}>
             2
           </div>
+          <div className={cn("w-8 h-1 rounded", step >= 3 ? "bg-primary" : "bg-muted")} />
+          <div className={cn(
+            "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
+            step >= 3 ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+          )}>
+            3
+          </div>
         </div>
 
+        {/* Step 1: Select Doctor */}
         {step === 1 && (
+          <div className="space-y-4">
+            <Label className="text-base font-medium">Select a Doctor</Label>
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {hospital.doctors.map((doc) => (
+                <button
+                  key={doc.id}
+                  type="button"
+                  onClick={() => handleSelectDoctor(doc)}
+                  className={cn(
+                    "w-full p-4 rounded-lg border text-left transition-all flex items-center gap-4",
+                    selectedDoctor?.id === doc.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50 bg-background"
+                  )}
+                >
+                  <img 
+                    src={doc.photoUrl} 
+                    alt={doc.name}
+                    className="w-12 h-12 rounded-full object-cover"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-foreground">{doc.name}</h4>
+                    <p className="text-sm text-primary">{doc.specialization}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="text-xs text-muted-foreground">{doc.experience} yrs exp</span>
+                      <span className="text-xs text-muted-foreground">•</span>
+                      <span className="text-xs text-muted-foreground">₹{doc.consultationFee}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {doc.availability.map((day) => (
+                        <span 
+                          key={day}
+                          className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-secondary text-secondary-foreground"
+                        >
+                          {day}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {selectedDoctor?.id === doc.id && (
+                    <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                      <span className="text-primary-foreground text-xs">✓</span>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <Button 
+              onClick={handleNext} 
+              disabled={!selectedDoctor}
+              className="w-full"
+            >
+              Continue
+            </Button>
+          </div>
+        )}
+
+        {/* Step 2: Select Date & Time */}
+        {step === 2 && (
           <div className="space-y-6">
+            {selectedDoctor && (
+              <div className="p-3 rounded-lg bg-muted/50 flex items-center gap-3">
+                <img 
+                  src={selectedDoctor.photoUrl} 
+                  alt={selectedDoctor.name}
+                  className="w-10 h-10 rounded-full object-cover"
+                />
+                <div>
+                  <p className="font-medium text-sm">{selectedDoctor.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedDoctor.specialization}</p>
+                </div>
+                <button 
+                  onClick={handleBack}
+                  className="ml-auto text-xs text-primary hover:underline"
+                >
+                  Change
+                </button>
+              </div>
+            )}
+
             <div>
               <Label className="mb-3 block">Select Date</Label>
+              <p className="text-xs text-muted-foreground mb-2">
+                {selectedDoctor && `${selectedDoctor.name} is available on: ${selectedDoctor.availability.join(', ')}`}
+              </p>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -259,55 +425,89 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
                     {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 pointer-events-auto" align="start">
                   <Calendar
                     mode="single"
                     selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => isBefore(date, startOfToday()) || isBefore(addDays(new Date(), 60), date)}
+                    onSelect={(date) => {
+                      setSelectedDate(date);
+                      setSelectedTime('');
+                    }}
+                    disabled={(date) => 
+                      isBefore(date, startOfToday()) || 
+                      isBefore(addDays(new Date(), 60), date) ||
+                      !isDateAvailable(date)
+                    }
                     initialFocus
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
 
-            <div>
-              <Label className="mb-3 block">Select Time Slot</Label>
-              <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
-                {timeSlots.map((time) => (
-                  <Button
-                    key={time}
-                    type="button"
-                    variant={selectedTime === time ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setSelectedTime(time)}
-                    className="text-xs"
-                  >
-                    <Clock className="w-3 h-3 mr-1" />
-                    {time}
-                  </Button>
-                ))}
+            {selectedDate && (
+              <div>
+                <Label className="mb-3 block">Select Time Slot</Label>
+                {availableTimeSlots.length > 0 ? (
+                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    {availableTimeSlots.map(({ time }) => (
+                      <Button
+                        key={time}
+                        type="button"
+                        variant={selectedTime === time ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setSelectedTime(time)}
+                        className="text-xs"
+                      >
+                        <Clock className="w-3 h-3 mr-1" />
+                        {time}
+                      </Button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No slots available for this date.</p>
+                )}
               </div>
-            </div>
+            )}
 
-            <Button 
-              onClick={handleNext} 
-              disabled={!selectedDate || !selectedTime}
-              className="w-full"
-            >
-              Continue
-            </Button>
+            <div className="flex gap-3">
+              <Button variant="outline" onClick={handleBack} className="flex-1">
+                Back
+              </Button>
+              <Button 
+                onClick={handleNext} 
+                disabled={!selectedDate || !selectedTime}
+                className="flex-1"
+              >
+                Continue
+              </Button>
+            </div>
           </div>
         )}
 
-        {step === 2 && (
+        {/* Step 3: Patient Details */}
+        {step === 3 && (
           <div className="space-y-4">
             <div className="p-4 rounded-lg bg-muted/50 mb-4">
-              <p className="text-sm font-medium text-foreground">
-                {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")} at {selectedTime}
-              </p>
+              <div className="flex items-center gap-3 mb-2">
+                {selectedDoctor && (
+                  <img 
+                    src={selectedDoctor.photoUrl} 
+                    alt={selectedDoctor.name}
+                    className="w-8 h-8 rounded-full object-cover"
+                  />
+                )}
+                <div>
+                  <p className="text-sm font-medium text-foreground">
+                    {selectedDoctor?.name}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {selectedDate && format(selectedDate, "EEEE, MMMM d, yyyy")} at {selectedTime}
+                  </p>
+                </div>
+              </div>
               <button 
-                onClick={handleBack}
+                onClick={() => setStep(2)}
                 className="text-sm text-primary hover:underline"
               >
                 Change date/time
