@@ -4,6 +4,7 @@ import { Header } from '@/components/Header';
 import { Footer } from '@/components/Footer';
 import { DoctorCard } from '@/components/DoctorCard';
 import { BookingModal } from '@/components/BookingModal';
+import { DoctorAvailabilityCalendar } from '@/components/DoctorAvailabilityCalendar';
 import { mockHospitals, mockReviews } from '@/data/mockData';
 import { SURGERY_TYPES, Doctor, Surgery } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -265,19 +266,33 @@ export default function HospitalProfile() {
             </TabsContent>
 
             {/* Doctors Tab */}
-            <TabsContent value="doctors">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {hospital.doctors.map((doctor) => (
-                  <DoctorCard 
-                    key={doctor.id} 
-                    doctor={doctor}
-                    onBookClick={(doc) => {
-                      setSelectedDoctor(doc);
-                      setBookingType('consultation');
-                      setBookingOpen(true);
-                    }}
-                  />
-                ))}
+            <TabsContent value="doctors" className="space-y-10">
+              {/* Visual Availability Calendar */}
+              <DoctorAvailabilityCalendar 
+                doctors={hospital.doctors}
+                onBookDoctor={(doctor, date) => {
+                  setSelectedDoctor(doctor);
+                  setBookingType('consultation');
+                  setBookingOpen(true);
+                }}
+              />
+
+              {/* Doctor Cards */}
+              <div>
+                <h3 className="text-xl font-semibold mb-6">Our Doctors</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {hospital.doctors.map((doctor) => (
+                    <DoctorCard 
+                      key={doctor.id} 
+                      doctor={doctor}
+                      onBookClick={(doc) => {
+                        setSelectedDoctor(doc);
+                        setBookingType('consultation');
+                        setBookingOpen(true);
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
             </TabsContent>
 
