@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,13 +6,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { 
   Building2, Plus, Edit2, Trash2, Upload, Save, Eye, BarChart3, 
-  Calendar, MessageSquare, TrendingUp, TrendingDown, Users, IndianRupee, Image, X
+  Calendar, MessageSquare, TrendingUp, TrendingDown, Users, IndianRupee, Image, X, Camera, Loader2
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { mockHospitals, mockSurgeries, mockDoctors } from '@/data/mockData';
 import { SURGERY_TYPES, SurgeryType, DashboardStats, Surgery, Doctor } from '@/types';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const hospital = mockHospitals[0];
 
@@ -49,6 +51,13 @@ export default function Dashboard() {
     consultationFee: '',
     bio: ''
   });
+
+  // Photo upload state
+  const [newDoctorPhoto, setNewDoctorPhoto] = useState<string | null>(null);
+  const [editDoctorPhoto, setEditDoctorPhoto] = useState<string | null>(null);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const addPhotoInputRef = useRef<HTMLInputElement>(null);
+  const editPhotoInputRef = useRef<HTMLInputElement>(null);
 
   const [newSurgery, setNewSurgery] = useState({
     name: '',
@@ -113,7 +122,7 @@ export default function Dashboard() {
       setDoctors([...doctors, {
         id: `d${doctors.length + 1}`,
         name: newDoctor.name,
-        photoUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop',
+        photoUrl: newDoctorPhoto || 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop',
         specialization: newDoctor.specialization,
         qualification: newDoctor.qualification || 'MBBS',
         experience: parseInt(newDoctor.experience),
@@ -124,7 +133,60 @@ export default function Dashboard() {
         bio: newDoctor.bio
       }]);
       setNewDoctor({ name: '', specialization: '', qualification: '', experience: '', consultationFee: '', bio: '' });
+      setNewDoctorPhoto(null);
       setIsAddDoctorModalOpen(false);
+    }
+  };
+
+  const handlePhotoUpload = async (file: File, isEdit: boolean = false) => {
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please upload an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setIsUploadingPhoto(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `doctors/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('doctor-photos')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('doctor-photos')
+        .getPublicUrl(filePath);
+
+      if (isEdit) {
+        setEditDoctorPhoto(publicUrl);
+        if (editingDoctor) {
+          setEditingDoctor({ ...editingDoctor, photoUrl: publicUrl });
+        }
+      } else {
+        setNewDoctorPhoto(publicUrl);
+      }
+
+      toast.success('Photo uploaded successfully');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.message || 'Failed to upload photo');
+    } finally {
+      setIsUploadingPhoto(false);
     }
   };
 
@@ -545,6 +607,52 @@ export default function Dashboard() {
             </DialogHeader>
             {editingDoctor && (
               <div className="space-y-4 py-4">
+                {/* Photo Upload */}
+                <div>
+                  <Label>Doctor Photo</Label>
+                  <div className="mt-2 flex items-center gap-4">
+                    <div className="relative w-20 h-20 rounded-full overflow-hidden bg-muted border-2 border-dashed border-border">
+                      <img 
+                        src={editingDoctor.photoUrl} 
+                        alt={editingDoctor.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <input
+                        ref={editPhotoInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handlePhotoUpload(file, true);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => editPhotoInputRef.current?.click()}
+                        disabled={isUploadingPhoto}
+                        className="gap-2"
+                      >
+                        {isUploadingPhoto ? (
+                          <>
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            Uploading...
+                          </>
+                        ) : (
+                          <>
+                            <Camera className="w-4 h-4" />
+                            Change Photo
+                          </>
+                        )}
+                      </Button>
+                      <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                    </div>
+                  </div>
+                </div>
                 <div>
                   <Label htmlFor="edit-doctor-name">Doctor Name</Label>
                   <Input
@@ -625,6 +733,58 @@ export default function Dashboard() {
               <DialogTitle>Add New Doctor</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
+              {/* Photo Upload */}
+              <div>
+                <Label>Doctor Photo</Label>
+                <div className="mt-2 flex items-center gap-4">
+                  <div className="relative w-20 h-20 rounded-full overflow-hidden bg-muted border-2 border-dashed border-border">
+                    {newDoctorPhoto ? (
+                      <img 
+                        src={newDoctorPhoto} 
+                        alt="Doctor preview"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Camera className="w-8 h-8 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input
+                      ref={addPhotoInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePhotoUpload(file, false);
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => addPhotoInputRef.current?.click()}
+                      disabled={isUploadingPhoto}
+                      className="gap-2"
+                    >
+                      {isUploadingPhoto ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Uploading...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="w-4 h-4" />
+                          Upload Photo
+                        </>
+                      )}
+                    </Button>
+                    <p className="text-xs text-muted-foreground mt-1">Max 5MB, JPG/PNG</p>
+                  </div>
+                </div>
+              </div>
               <div>
                 <Label htmlFor="add-doctor-name">Doctor Name *</Label>
                 <Input
