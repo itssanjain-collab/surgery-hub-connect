@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { mockHospitals, mockSurgeries, mockDoctors } from '@/data/mockData';
-import { SURGERY_TYPES, SurgeryType, DashboardStats, Surgery } from '@/types';
+import { SURGERY_TYPES, SurgeryType, DashboardStats, Surgery, Doctor } from '@/types';
 import { cn } from '@/lib/utils';
 
 const hospital = mockHospitals[0];
@@ -34,6 +34,10 @@ export default function Dashboard() {
   // Surgery edit state
   const [editingSurgery, setEditingSurgery] = useState<Surgery | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Doctor edit state
+  const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
+  const [isDoctorEditModalOpen, setIsDoctorEditModalOpen] = useState(false);
 
   const [newSurgery, setNewSurgery] = useState({
     name: '',
@@ -74,6 +78,23 @@ export default function Dashboard() {
 
   const handleDeleteSurgery = (id: string) => {
     setSurgeries(surgeries.filter(s => s.id !== id));
+  };
+
+  const handleEditDoctor = (doctor: Doctor) => {
+    setEditingDoctor({ ...doctor });
+    setIsDoctorEditModalOpen(true);
+  };
+
+  const handleSaveEditedDoctor = () => {
+    if (editingDoctor) {
+      setDoctors(doctors.map(d => d.id === editingDoctor.id ? editingDoctor : d));
+      setIsDoctorEditModalOpen(false);
+      setEditingDoctor(null);
+    }
+  };
+
+  const handleDeleteDoctor = (id: string) => {
+    setDoctors(doctors.filter(d => d.id !== id));
   };
 
   const formatNumber = (num: number) => {
@@ -336,10 +357,15 @@ export default function Dashboard() {
                         <p className="font-semibold text-foreground">₹{doctor.consultationFee}</p>
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditDoctor(doctor)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleDeleteDoctor(doctor.id)}
+                          className="text-destructive hover:text-destructive"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -471,6 +497,87 @@ export default function Dashboard() {
                     Cancel
                   </Button>
                   <Button onClick={handleSaveEditedSurgery} className="flex-1 gap-2">
+                    <Save className="w-4 h-4" />
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Doctor Edit Modal */}
+        <Dialog open={isDoctorEditModalOpen} onOpenChange={setIsDoctorEditModalOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Edit Doctor</DialogTitle>
+            </DialogHeader>
+            {editingDoctor && (
+              <div className="space-y-4 py-4">
+                <div>
+                  <Label htmlFor="edit-doctor-name">Doctor Name</Label>
+                  <Input
+                    id="edit-doctor-name"
+                    value={editingDoctor.name}
+                    onChange={(e) => setEditingDoctor({ ...editingDoctor, name: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-doctor-specialization">Specialization</Label>
+                  <Input
+                    id="edit-doctor-specialization"
+                    value={editingDoctor.specialization}
+                    onChange={(e) => setEditingDoctor({ ...editingDoctor, specialization: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-doctor-qualification">Qualification</Label>
+                  <Input
+                    id="edit-doctor-qualification"
+                    value={editingDoctor.qualification}
+                    onChange={(e) => setEditingDoctor({ ...editingDoctor, qualification: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-doctor-experience">Experience (years)</Label>
+                    <Input
+                      id="edit-doctor-experience"
+                      type="number"
+                      value={editingDoctor.experience}
+                      onChange={(e) => setEditingDoctor({ ...editingDoctor, experience: parseInt(e.target.value) || 0 })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-doctor-fee">Consultation Fee (₹)</Label>
+                    <Input
+                      id="edit-doctor-fee"
+                      type="number"
+                      value={editingDoctor.consultationFee}
+                      onChange={(e) => setEditingDoctor({ ...editingDoctor, consultationFee: parseInt(e.target.value) || 0 })}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-doctor-bio">Bio</Label>
+                  <Textarea
+                    id="edit-doctor-bio"
+                    value={editingDoctor.bio || ''}
+                    onChange={(e) => setEditingDoctor({ ...editingDoctor, bio: e.target.value })}
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" onClick={() => setIsDoctorEditModalOpen(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveEditedDoctor} className="flex-1 gap-2">
                     <Save className="w-4 h-4" />
                     Save Changes
                   </Button>
