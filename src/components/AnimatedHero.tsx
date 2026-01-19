@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Search, MapPin, Stethoscope, Building2, ShieldCheck } from 'lucide-react';
+import { Search, MapPin, Stethoscope, Building2, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 
 const stats = [
   { value: 500, suffix: '+', label: 'Hospitals' },
@@ -39,7 +40,9 @@ function AnimatedCounter({ value, suffix }: { value: number; suffix: string }) {
 export function AnimatedHero() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isVisible, setIsVisible] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     setIsVisible(true);
@@ -48,6 +51,47 @@ export function AnimatedHero() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     navigate(`/search?q=${encodeURIComponent(searchQuery)}`);
+  };
+
+  const handleNearMe = () => {
+    if (!navigator.geolocation) {
+      toast({
+        title: "Location not supported",
+        description: "Your browser doesn't support geolocation.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setIsLocating(false);
+        navigate(`/search?lat=${latitude}&lng=${longitude}&nearby=true`);
+        toast({
+          title: "Location found",
+          description: "Showing hospitals near you.",
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        let message = "Unable to get your location.";
+        if (error.code === error.PERMISSION_DENIED) {
+          message = "Please allow location access to find nearby hospitals.";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          message = "Location information is unavailable.";
+        } else if (error.code === error.TIMEOUT) {
+          message = "Location request timed out.";
+        }
+        toast({
+          title: "Location error",
+          description: message,
+          variant: "destructive",
+        });
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
+    );
   };
 
   return (
@@ -133,9 +177,15 @@ export function AnimatedHero() {
                   variant="outline" 
                   size="lg" 
                   className="h-12 md:h-14 px-4 gap-2 flex-1 md:flex-none"
+                  onClick={handleNearMe}
+                  disabled={isLocating}
                 >
-                  <MapPin className="w-5 h-5" />
-                  <span className="hidden sm:inline">Near Me</span>
+                  {isLocating ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <MapPin className="w-5 h-5" />
+                  )}
+                  <span className="hidden sm:inline">{isLocating ? 'Locating...' : 'Near Me'}</span>
                 </Button>
                 <Button type="submit" size="lg" className="h-12 md:h-14 px-6 md:px-8 flex-1 md:flex-none">
                   Search
