@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const RESEND_API_KEY = (Deno.env.get("RESEND_API_KEY") ?? "").trim();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +28,14 @@ serve(async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!RESEND_API_KEY) {
+      console.error("Missing RESEND_API_KEY secret");
+      return new Response(JSON.stringify({ error: "Email service is not configured." }), {
+        status: 500,
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+
     const {
       patientName,
       patientEmail,
