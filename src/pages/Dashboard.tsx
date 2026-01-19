@@ -685,7 +685,7 @@ export default function Dashboard() {
 
         {/* Doctor Edit Modal */}
         <Dialog open={isDoctorEditModalOpen} onOpenChange={setIsDoctorEditModalOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Doctor</DialogTitle>
             </DialogHeader>
@@ -800,7 +800,7 @@ export default function Dashboard() {
                 <div>
                   <Label>Availability Schedule</Label>
                   <p className="text-xs text-muted-foreground mb-3">Select days and time slots when the doctor is available</p>
-                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-2 border border-border rounded-lg p-2 bg-muted/30">
                     {DAYS_OF_WEEK.map((day) => {
                       const isSelected = !!editDoctorSchedule[day];
                       const daySlots = editDoctorSchedule[day] || [];
@@ -865,7 +865,7 @@ export default function Dashboard() {
 
         {/* Add Doctor Modal */}
         <Dialog open={isAddDoctorModalOpen} onOpenChange={setIsAddDoctorModalOpen}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add New Doctor</DialogTitle>
             </DialogHeader>
@@ -991,7 +991,7 @@ export default function Dashboard() {
               <div>
                 <Label>Availability Schedule *</Label>
                 <p className="text-xs text-muted-foreground mb-3">Select days and time slots when the doctor is available</p>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-2 border border-border rounded-lg p-2 bg-muted/30">
                   {DAYS_OF_WEEK.map((day) => {
                     const isSelected = !!newDoctorAvailability[day];
                     const daySlots = newDoctorAvailability[day] || [];
