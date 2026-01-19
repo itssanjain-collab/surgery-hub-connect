@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import MyBookings from "./pages/MyBookings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import { AIChatbot } from "./components/AIChatbot";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <AIChatbot />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
