@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Send, Bot, User, Loader2, X, MessageCircle, Calendar, Stethoscope, HelpCircle, Building2 } from 'lucide-react';
+import { Send, Bot, User, Loader2, X, MessageCircle, Calendar, Stethoscope, HelpCircle, Building2, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 type Message = {
@@ -171,9 +171,21 @@ export function AIChatbot() {
               <p className="text-xs text-muted-foreground">AI-powered help</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
-            <X className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-1">
+            {messages.length > 0 && (
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setMessages([])}
+                title="Clear chat"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            )}
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Messages */}
