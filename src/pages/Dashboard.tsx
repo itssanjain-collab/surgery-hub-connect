@@ -138,10 +138,18 @@ export default function Dashboard() {
             <div className="card-elevated p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Hospital Information</h3>
-                <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
-                  <Edit2 className="w-4 h-4 mr-2" />
-                  {isEditing ? 'Cancel' : 'Edit'}
-                </Button>
+                <div className="flex gap-2">
+                  {isEditing && (
+                    <Button size="sm" onClick={() => setIsEditing(false)} className="gap-2">
+                      <Save className="w-4 h-4" />
+                      Save Hospital Details
+                    </Button>
+                  )}
+                  <Button variant="outline" size="sm" onClick={() => setIsEditing(!isEditing)}>
+                    <Edit2 className="w-4 h-4 mr-2" />
+                    {isEditing ? 'Cancel' : 'Edit'}
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
