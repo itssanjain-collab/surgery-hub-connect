@@ -52,9 +52,10 @@ export default function Auth() {
   const [resetEmailSent, setResetEmailSent] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string; confirmPassword?: string }>({});
 
-  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, user } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, updatePassword, user, session, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [sessionReady, setSessionReady] = useState(false);
 
   useEffect(() => {
     if (user && mode !== 'reset') {
@@ -65,8 +66,22 @@ export default function Auth() {
   useEffect(() => {
     if (urlMode === 'reset') {
       setMode('reset');
+      // Wait for auth to finish loading and check if session exists
+      if (!authLoading) {
+        if (session) {
+          setSessionReady(true);
+        } else {
+          // No session means the reset link is invalid or expired
+          toast({
+            title: "Link expired",
+            description: "This password reset link is invalid or has expired. Please request a new one.",
+            variant: "destructive",
+          });
+          setMode('forgot');
+        }
+      }
     }
-  }, [urlMode]);
+  }, [urlMode, authLoading, session, toast]);
 
   const validateForm = () => {
     const newErrors: typeof errors = {};
@@ -133,6 +148,15 @@ export default function Auth() {
           setResetEmailSent(true);
         }
       } else if (mode === 'reset') {
+        if (!session) {
+          toast({
+            title: "Session expired",
+            description: "Your session has expired. Please request a new password reset link.",
+            variant: "destructive",
+          });
+          setMode('forgot');
+          return;
+        }
         const { error } = await updatePassword(password);
         if (error) {
           toast({
