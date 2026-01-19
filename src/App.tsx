@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import MyBookings from "./pages/MyBookings";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import HospitalRegister from "./pages/HospitalRegister";
 import { AIChatbot } from "./components/AIChatbot";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/favorites" element={<Favorites />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/auth" element={<Auth />} />
+            <Route path="/hospital-register" element={<HospitalRegister />} />
             <Route path="/my-bookings" element={<MyBookings />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="*" element={<NotFound />} />
