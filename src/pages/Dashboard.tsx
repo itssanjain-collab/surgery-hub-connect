@@ -51,9 +51,19 @@ export default function Dashboard() {
     consultationFee: '',
     bio: ''
   });
-  const [newDoctorAvailability, setNewDoctorAvailability] = useState<string[]>(['Mon', 'Wed', 'Fri']);
+  const [newDoctorAvailability, setNewDoctorAvailability] = useState<Record<string, string[]>>({
+    Mon: ['morning', 'afternoon'],
+    Wed: ['morning', 'afternoon'],
+    Fri: ['morning', 'afternoon']
+  });
+  const [editDoctorSchedule, setEditDoctorSchedule] = useState<Record<string, string[]>>({});
 
   const DAYS_OF_WEEK = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const TIME_SLOTS = [
+    { id: 'morning', label: 'Morning', time: '9AM - 12PM' },
+    { id: 'afternoon', label: 'Afternoon', time: '12PM - 5PM' },
+    { id: 'evening', label: 'Evening', time: '5PM - 8PM' }
+  ];
 
   // Photo upload state
   const [newDoctorPhoto, setNewDoctorPhoto] = useState<string | null>(null);
@@ -103,25 +113,15 @@ export default function Dashboard() {
     setSurgeries(surgeries.filter(s => s.id !== id));
   };
 
-  const handleEditDoctor = (doctor: Doctor) => {
-    setEditingDoctor({ ...doctor });
-    setIsDoctorEditModalOpen(true);
-  };
-
-  const handleSaveEditedDoctor = () => {
-    if (editingDoctor) {
-      setDoctors(doctors.map(d => d.id === editingDoctor.id ? editingDoctor : d));
-      setIsDoctorEditModalOpen(false);
-      setEditingDoctor(null);
-    }
-  };
-
   const handleDeleteDoctor = (id: string) => {
     setDoctors(doctors.filter(d => d.id !== id));
   };
 
   const handleAddDoctor = () => {
     if (newDoctor.name && newDoctor.specialization && newDoctor.experience && newDoctor.consultationFee) {
+      // Convert schedule to simple availability array for display
+      const availabilityDays = Object.keys(newDoctorAvailability).filter(day => newDoctorAvailability[day].length > 0);
+      
       setDoctors([...doctors, {
         id: `d${doctors.length + 1}`,
         name: newDoctor.name,
@@ -132,30 +132,93 @@ export default function Dashboard() {
         consultationFee: parseInt(newDoctor.consultationFee),
         rating: 4.5,
         reviewCount: 0,
-        availability: newDoctorAvailability,
+        availability: availabilityDays,
         bio: newDoctor.bio
       }]);
       setNewDoctor({ name: '', specialization: '', qualification: '', experience: '', consultationFee: '', bio: '' });
       setNewDoctorPhoto(null);
-      setNewDoctorAvailability(['Mon', 'Wed', 'Fri']);
+      setNewDoctorAvailability({
+        Mon: ['morning', 'afternoon'],
+        Wed: ['morning', 'afternoon'],
+        Fri: ['morning', 'afternoon']
+      });
       setIsAddDoctorModalOpen(false);
     }
   };
 
+  const handleEditDoctor = (doctor: Doctor) => {
+    setEditingDoctor({ ...doctor });
+    // Initialize schedule from existing availability
+    const schedule: Record<string, string[]> = {};
+    (doctor.availability || []).forEach(day => {
+      schedule[day] = ['morning', 'afternoon']; // Default to morning & afternoon for existing days
+    });
+    setEditDoctorSchedule(schedule);
+    setIsDoctorEditModalOpen(true);
+  };
+
+  const handleSaveEditedDoctor = () => {
+    if (editingDoctor) {
+      // Convert schedule to simple availability array
+      const availabilityDays = Object.keys(editDoctorSchedule).filter(day => editDoctorSchedule[day].length > 0);
+      setDoctors(doctors.map(d => d.id === editingDoctor.id ? { ...editingDoctor, availability: availabilityDays } : d));
+      setIsDoctorEditModalOpen(false);
+      setEditingDoctor(null);
+      setEditDoctorSchedule({});
+    }
+  };
+
   const toggleDay = (day: string, isEdit: boolean = false) => {
-    if (isEdit && editingDoctor) {
-      const currentAvailability = editingDoctor.availability || [];
-      if (currentAvailability.includes(day)) {
-        setEditingDoctor({ ...editingDoctor, availability: currentAvailability.filter(d => d !== day) });
-      } else {
-        setEditingDoctor({ ...editingDoctor, availability: [...currentAvailability, day] });
-      }
+    if (isEdit) {
+      setEditDoctorSchedule(prev => {
+        if (prev[day]) {
+          const { [day]: _, ...rest } = prev;
+          return rest;
+        } else {
+          return { ...prev, [day]: ['morning', 'afternoon'] };
+        }
+      });
     } else {
-      if (newDoctorAvailability.includes(day)) {
-        setNewDoctorAvailability(newDoctorAvailability.filter(d => d !== day));
-      } else {
-        setNewDoctorAvailability([...newDoctorAvailability, day]);
-      }
+      setNewDoctorAvailability(prev => {
+        if (prev[day]) {
+          const { [day]: _, ...rest } = prev;
+          return rest;
+        } else {
+          return { ...prev, [day]: ['morning', 'afternoon'] };
+        }
+      });
+    }
+  };
+
+  const toggleTimeSlot = (day: string, slot: string, isEdit: boolean = false) => {
+    if (isEdit) {
+      setEditDoctorSchedule(prev => {
+        const daySlots = prev[day] || [];
+        if (daySlots.includes(slot)) {
+          const newSlots = daySlots.filter(s => s !== slot);
+          if (newSlots.length === 0) {
+            const { [day]: _, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, [day]: newSlots };
+        } else {
+          return { ...prev, [day]: [...daySlots, slot] };
+        }
+      });
+    } else {
+      setNewDoctorAvailability(prev => {
+        const daySlots = prev[day] || [];
+        if (daySlots.includes(slot)) {
+          const newSlots = daySlots.filter(s => s !== slot);
+          if (newSlots.length === 0) {
+            const { [day]: _, ...rest } = prev;
+            return rest;
+          }
+          return { ...prev, [day]: newSlots };
+        } else {
+          return { ...prev, [day]: [...daySlots, slot] };
+        }
+      });
     }
   };
 
@@ -733,26 +796,57 @@ export default function Dashboard() {
                     rows={3}
                   />
                 </div>
-                {/* Availability Schedule */}
+                {/* Availability Schedule with Time Slots */}
                 <div>
-                  <Label>Availability</Label>
-                  <p className="text-xs text-muted-foreground mb-2">Select days when the doctor is available</p>
-                  <div className="flex flex-wrap gap-2">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => toggleDay(day, true)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                          (editingDoctor.availability || []).includes(day)
-                            ? "bg-primary text-primary-foreground"
-                            : "bg-muted text-muted-foreground hover:bg-muted/80"
-                        )}
-                      >
-                        {day}
-                      </button>
-                    ))}
+                  <Label>Availability Schedule</Label>
+                  <p className="text-xs text-muted-foreground mb-3">Select days and time slots when the doctor is available</p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                    {DAYS_OF_WEEK.map((day) => {
+                      const isSelected = !!editDoctorSchedule[day];
+                      const daySlots = editDoctorSchedule[day] || [];
+                      return (
+                        <div key={day} className="rounded-lg border border-border p-3 bg-background">
+                          <div className="flex items-center justify-between mb-2">
+                            <button
+                              type="button"
+                              onClick={() => toggleDay(day, true)}
+                              className={cn(
+                                "flex items-center gap-2 font-medium text-sm transition-colors",
+                                isSelected ? "text-primary" : "text-muted-foreground"
+                              )}
+                            >
+                              <div className={cn(
+                                "w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
+                                isSelected ? "bg-primary border-primary" : "border-muted-foreground"
+                              )}>
+                                {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                              </div>
+                              {day}
+                            </button>
+                          </div>
+                          {isSelected && (
+                            <div className="flex flex-wrap gap-2 ml-6">
+                              {TIME_SLOTS.map((slot) => (
+                                <button
+                                  key={slot.id}
+                                  type="button"
+                                  onClick={() => toggleTimeSlot(day, slot.id, true)}
+                                  className={cn(
+                                    "px-2 py-1 rounded text-xs font-medium transition-colors",
+                                    daySlots.includes(slot.id)
+                                      ? "bg-primary/20 text-primary border border-primary/30"
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  )}
+                                >
+                                  {slot.label}
+                                  <span className="text-[10px] opacity-70 ml-1">({slot.time})</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
                 <div className="flex gap-3 pt-2">
@@ -893,26 +987,57 @@ export default function Dashboard() {
                   rows={3}
                 />
               </div>
-              {/* Availability Schedule */}
+              {/* Availability Schedule with Time Slots */}
               <div>
-                <Label>Availability *</Label>
-                <p className="text-xs text-muted-foreground mb-2">Select days when the doctor is available</p>
-                <div className="flex flex-wrap gap-2">
-                  {DAYS_OF_WEEK.map((day) => (
-                    <button
-                      key={day}
-                      type="button"
-                      onClick={() => toggleDay(day, false)}
-                      className={cn(
-                        "px-3 py-1.5 rounded-full text-sm font-medium transition-colors",
-                        newDoctorAvailability.includes(day)
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      )}
-                    >
-                      {day}
-                    </button>
-                  ))}
+                <Label>Availability Schedule *</Label>
+                <p className="text-xs text-muted-foreground mb-3">Select days and time slots when the doctor is available</p>
+                <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                  {DAYS_OF_WEEK.map((day) => {
+                    const isSelected = !!newDoctorAvailability[day];
+                    const daySlots = newDoctorAvailability[day] || [];
+                    return (
+                      <div key={day} className="rounded-lg border border-border p-3 bg-background">
+                        <div className="flex items-center justify-between mb-2">
+                          <button
+                            type="button"
+                            onClick={() => toggleDay(day, false)}
+                            className={cn(
+                              "flex items-center gap-2 font-medium text-sm transition-colors",
+                              isSelected ? "text-primary" : "text-muted-foreground"
+                            )}
+                          >
+                            <div className={cn(
+                              "w-4 h-4 rounded border-2 flex items-center justify-center transition-colors",
+                              isSelected ? "bg-primary border-primary" : "border-muted-foreground"
+                            )}>
+                              {isSelected && <span className="text-primary-foreground text-xs">✓</span>}
+                            </div>
+                            {day}
+                          </button>
+                        </div>
+                        {isSelected && (
+                          <div className="flex flex-wrap gap-2 ml-6">
+                            {TIME_SLOTS.map((slot) => (
+                              <button
+                                key={slot.id}
+                                type="button"
+                                onClick={() => toggleTimeSlot(day, slot.id, false)}
+                                className={cn(
+                                  "px-2 py-1 rounded text-xs font-medium transition-colors",
+                                  daySlots.includes(slot.id)
+                                    ? "bg-primary/20 text-primary border border-primary/30"
+                                    : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                )}
+                              >
+                                {slot.label}
+                                <span className="text-[10px] opacity-70 ml-1">({slot.time})</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
