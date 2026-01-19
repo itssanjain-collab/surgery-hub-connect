@@ -39,6 +39,17 @@ export default function Dashboard() {
   const [editingDoctor, setEditingDoctor] = useState<Doctor | null>(null);
   const [isDoctorEditModalOpen, setIsDoctorEditModalOpen] = useState(false);
 
+  // Add doctor modal state
+  const [isAddDoctorModalOpen, setIsAddDoctorModalOpen] = useState(false);
+  const [newDoctor, setNewDoctor] = useState({
+    name: '',
+    specialization: '',
+    qualification: '',
+    experience: '',
+    consultationFee: '',
+    bio: ''
+  });
+
   const [newSurgery, setNewSurgery] = useState({
     name: '',
     type: 'curative' as SurgeryType,
@@ -95,6 +106,26 @@ export default function Dashboard() {
 
   const handleDeleteDoctor = (id: string) => {
     setDoctors(doctors.filter(d => d.id !== id));
+  };
+
+  const handleAddDoctor = () => {
+    if (newDoctor.name && newDoctor.specialization && newDoctor.experience && newDoctor.consultationFee) {
+      setDoctors([...doctors, {
+        id: `d${doctors.length + 1}`,
+        name: newDoctor.name,
+        photoUrl: 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop',
+        specialization: newDoctor.specialization,
+        qualification: newDoctor.qualification || 'MBBS',
+        experience: parseInt(newDoctor.experience),
+        consultationFee: parseInt(newDoctor.consultationFee),
+        rating: 4.5,
+        reviewCount: 0,
+        availability: ['Mon', 'Wed', 'Fri'],
+        bio: newDoctor.bio
+      }]);
+      setNewDoctor({ name: '', specialization: '', qualification: '', experience: '', consultationFee: '', bio: '' });
+      setIsAddDoctorModalOpen(false);
+    }
   };
 
   const formatNumber = (num: number) => {
@@ -328,7 +359,7 @@ export default function Dashboard() {
             <div className="card-elevated p-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold">Your Doctors ({doctors.length})</h3>
-                <Button className="gap-2">
+                <Button className="gap-2" onClick={() => setIsAddDoctorModalOpen(true)}>
                   <Plus className="w-4 h-4" />
                   Add Doctor
                 </Button>
@@ -584,6 +615,91 @@ export default function Dashboard() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Add Doctor Modal */}
+        <Dialog open={isAddDoctorModalOpen} onOpenChange={setIsAddDoctorModalOpen}>
+          <DialogContent className="sm:max-w-[500px]">
+            <DialogHeader>
+              <DialogTitle>Add New Doctor</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="add-doctor-name">Doctor Name *</Label>
+                <Input
+                  id="add-doctor-name"
+                  placeholder="e.g., Dr. Rajesh Kumar"
+                  value={newDoctor.name}
+                  onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-doctor-specialization">Specialization *</Label>
+                <Input
+                  id="add-doctor-specialization"
+                  placeholder="e.g., Orthopedic Surgeon"
+                  value={newDoctor.specialization}
+                  onChange={(e) => setNewDoctor({ ...newDoctor, specialization: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-doctor-qualification">Qualification</Label>
+                <Input
+                  id="add-doctor-qualification"
+                  placeholder="e.g., MBBS, MS Ortho"
+                  value={newDoctor.qualification}
+                  onChange={(e) => setNewDoctor({ ...newDoctor, qualification: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="add-doctor-experience">Experience (years) *</Label>
+                  <Input
+                    id="add-doctor-experience"
+                    type="number"
+                    placeholder="10"
+                    value={newDoctor.experience}
+                    onChange={(e) => setNewDoctor({ ...newDoctor, experience: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="add-doctor-fee">Consultation Fee (₹) *</Label>
+                  <Input
+                    id="add-doctor-fee"
+                    type="number"
+                    placeholder="500"
+                    value={newDoctor.consultationFee}
+                    onChange={(e) => setNewDoctor({ ...newDoctor, consultationFee: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label htmlFor="add-doctor-bio">Bio</Label>
+                <Textarea
+                  id="add-doctor-bio"
+                  placeholder="Brief description about the doctor..."
+                  value={newDoctor.bio}
+                  onChange={(e) => setNewDoctor({ ...newDoctor, bio: e.target.value })}
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button variant="outline" onClick={() => setIsAddDoctorModalOpen(false)} className="flex-1">
+                  Cancel
+                </Button>
+                <Button onClick={handleAddDoctor} className="flex-1 gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Doctor
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
