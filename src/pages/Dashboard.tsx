@@ -69,8 +69,11 @@ export default function Dashboard() {
   const [newDoctorPhoto, setNewDoctorPhoto] = useState<string | null>(null);
   const [editDoctorPhoto, setEditDoctorPhoto] = useState<string | null>(null);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+  const [galleryImages, setGalleryImages] = useState<string[]>(hospital.galleryImages);
   const addPhotoInputRef = useRef<HTMLInputElement>(null);
   const editPhotoInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const [newSurgery, setNewSurgery] = useState({
     name: '',
@@ -272,6 +275,69 @@ export default function Dashboard() {
     } finally {
       setIsUploadingPhoto(false);
     }
+  };
+
+  // Gallery photo upload handler
+  const handleGalleryUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+
+    setIsUploadingGallery(true);
+    const uploadedUrls: string[] = [];
+
+    try {
+      for (const file of Array.from(files)) {
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          toast.error(`${file.name} is not an image file`);
+          continue;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          toast.error(`${file.name} is larger than 5MB`);
+          continue;
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+        const filePath = `gallery/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('doctor-photos')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast.error(`Failed to upload ${file.name}`);
+          continue;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('doctor-photos')
+          .getPublicUrl(filePath);
+
+        uploadedUrls.push(publicUrl);
+      }
+
+      if (uploadedUrls.length > 0) {
+        setGalleryImages(prev => [...prev, ...uploadedUrls]);
+        toast.success(`${uploadedUrls.length} photo(s) uploaded successfully`);
+      }
+    } catch (error: any) {
+      console.error('Gallery upload error:', error);
+      toast.error(error.message || 'Failed to upload photos');
+    } finally {
+      setIsUploadingGallery(false);
+      if (galleryInputRef.current) {
+        galleryInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Delete gallery image
+  const handleDeleteGalleryImage = (index: number) => {
+    setGalleryImages(prev => prev.filter((_, i) => i !== index));
+    toast.success('Photo removed from gallery');
   };
 
   const formatNumber = (num: number) => {
@@ -557,29 +623,67 @@ export default function Dashboard() {
           <TabsContent value="gallery" className="space-y-6">
             <div className="card-elevated p-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Hospital Gallery</h3>
-                <Button className="gap-2">
-                  <Upload className="w-4 h-4" />
-                  Upload Photos
-                </Button>
+                <h3 className="text-lg font-semibold">Hospital Gallery ({galleryImages.length + 1} photos)</h3>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={galleryInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    className="hidden"
+                    onChange={(e) => handleGalleryUpload(e.target.files)}
+                  />
+                  <Button 
+                    className="gap-2" 
+                    onClick={() => galleryInputRef.current?.click()}
+                    disabled={isUploadingGallery}
+                  >
+                    {isUploadingGallery ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4" />
+                    )}
+                    {isUploadingGallery ? 'Uploading...' : 'Upload Photos'}
+                  </Button>
+                </div>
               </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[hospital.imageUrl, ...hospital.galleryImages].map((img, i) => (
+                {/* Main hospital image */}
+                <div className="relative group aspect-video rounded-xl overflow-hidden bg-muted">
+                  <img src={hospital.imageUrl} alt="Main" className="w-full h-full object-cover" />
+                  <div className="absolute top-2 left-2 px-2 py-1 rounded bg-primary text-primary-foreground text-xs font-medium">
+                    Main Photo
+                  </div>
+                </div>
+                {/* Gallery images */}
+                {galleryImages.map((img, i) => (
                   <div key={i} className="relative group aspect-video rounded-xl overflow-hidden bg-muted">
                     <img src={img} alt="" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-foreground/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <Button variant="secondary" size="icon-sm">
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button variant="destructive" size="icon-sm">
+                      <Button 
+                        variant="destructive" 
+                        size="icon-sm"
+                        onClick={() => handleDeleteGalleryImage(i)}
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
                   </div>
                 ))}
-                <button className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-muted/50 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary">
-                  <Image className="w-8 h-8" />
-                  <span className="text-sm font-medium">Add Photo</span>
+                {/* Add photo button */}
+                <button 
+                  onClick={() => galleryInputRef.current?.click()}
+                  disabled={isUploadingGallery}
+                  className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary hover:bg-muted/50 transition-colors flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isUploadingGallery ? (
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                  ) : (
+                    <Image className="w-8 h-8" />
+                  )}
+                  <span className="text-sm font-medium">
+                    {isUploadingGallery ? 'Uploading...' : 'Add Photo'}
+                  </span>
                 </button>
               </div>
             </div>
