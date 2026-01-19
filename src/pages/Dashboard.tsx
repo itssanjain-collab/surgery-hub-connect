@@ -3,13 +3,15 @@ import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { 
   Building2, Plus, Edit2, Trash2, Upload, Save, Eye, BarChart3, 
-  Calendar, MessageSquare, TrendingUp, TrendingDown, Users, IndianRupee, Image
+  Calendar, MessageSquare, TrendingUp, TrendingDown, Users, IndianRupee, Image, X
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { mockHospitals, mockSurgeries, mockDoctors } from '@/data/mockData';
-import { SURGERY_TYPES, SurgeryType, DashboardStats } from '@/types';
+import { SURGERY_TYPES, SurgeryType, DashboardStats, Surgery } from '@/types';
 import { cn } from '@/lib/utils';
 
 const hospital = mockHospitals[0];
@@ -28,6 +30,10 @@ export default function Dashboard() {
   const [surgeries, setSurgeries] = useState(mockSurgeries);
   const [doctors, setDoctors] = useState(mockDoctors);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Surgery edit state
+  const [editingSurgery, setEditingSurgery] = useState<Surgery | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const [newSurgery, setNewSurgery] = useState({
     name: '',
@@ -50,6 +56,19 @@ export default function Dashboard() {
         recoveryTime: '2-4 weeks'
       }]);
       setNewSurgery({ name: '', type: 'curative', minCost: '', maxCost: '', description: '' });
+    }
+  };
+
+  const handleEditSurgery = (surgery: Surgery) => {
+    setEditingSurgery({ ...surgery });
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditedSurgery = () => {
+    if (editingSurgery) {
+      setSurgeries(surgeries.map(s => s.id === editingSurgery.id ? editingSurgery : s));
+      setIsEditModalOpen(false);
+      setEditingSurgery(null);
     }
   };
 
@@ -264,7 +283,7 @@ export default function Dashboard() {
                         </p>
                       </div>
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" onClick={() => handleEditSurgery(surgery)}>
                           <Edit2 className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -384,6 +403,82 @@ export default function Dashboard() {
             </div>
           </TabsContent>
         </Tabs>
+
+        {/* Edit Surgery Modal */}
+        <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Surgery</DialogTitle>
+            </DialogHeader>
+            {editingSurgery && (
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="edit-name">Surgery Name</Label>
+                  <Input
+                    id="edit-name"
+                    value={editingSurgery.name}
+                    onChange={(e) => setEditingSurgery({ ...editingSurgery, name: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-type">Surgery Type</Label>
+                  <select
+                    id="edit-type"
+                    value={editingSurgery.type}
+                    onChange={(e) => setEditingSurgery({ ...editingSurgery, type: e.target.value as SurgeryType })}
+                    className="mt-1 w-full h-10 px-3 rounded-lg border border-input bg-background"
+                  >
+                    {(Object.keys(SURGERY_TYPES) as SurgeryType[]).map((type) => (
+                      <option key={type} value={type}>{SURGERY_TYPES[type].label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="edit-minCost">Min Cost (₹)</Label>
+                    <Input
+                      id="edit-minCost"
+                      type="number"
+                      value={editingSurgery.minCost}
+                      onChange={(e) => setEditingSurgery({ ...editingSurgery, minCost: parseInt(e.target.value) || 0 })}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-maxCost">Max Cost (₹)</Label>
+                    <Input
+                      id="edit-maxCost"
+                      type="number"
+                      value={editingSurgery.maxCost}
+                      onChange={(e) => setEditingSurgery({ ...editingSurgery, maxCost: parseInt(e.target.value) || 0 })}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="edit-description">Description</Label>
+                  <Textarea
+                    id="edit-description"
+                    value={editingSurgery.description}
+                    onChange={(e) => setEditingSurgery({ ...editingSurgery, description: e.target.value })}
+                    className="mt-1"
+                    rows={3}
+                  />
+                </div>
+                <div className="flex gap-3 pt-2">
+                  <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleSaveEditedSurgery} className="flex-1 gap-2">
+                    <Save className="w-4 h-4" />
+                    Save Changes
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
