@@ -44,7 +44,7 @@ export function Header() {
             <img 
               src="/logo.jpeg" 
               alt="Connect Hospital" 
-              className="h-10 w-10 object-contain"
+              className="h-12 w-12 object-contain"
             />
             <span className={cn(
               "font-display text-xl font-bold hidden sm:block",
