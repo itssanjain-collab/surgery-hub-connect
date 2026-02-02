@@ -14,7 +14,7 @@ export function Footer() {
               <img 
                 src="/logo.jpeg" 
                 alt="Connect Hospital" 
-                className="h-10 w-10 object-contain"
+                className="h-14 w-14 object-contain"
               />
               <span className="font-display text-xl font-bold text-background">Connect Hospital</span>
             </Link>
