@@ -5,7 +5,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-foreground text-background/90">
+    <footer className="bg-card border-t border-border">
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
           {/* Brand */}
@@ -16,9 +16,9 @@ export function Footer() {
                 alt="Connect Hospital" 
                 className="h-14 w-14 object-contain"
               />
-              <span className="font-display text-xl font-bold text-background">Connect Hospital</span>
+              <span className="font-display text-xl font-bold text-primary">Connect Hospital</span>
             </Link>
-            <p className="text-sm text-background/70 leading-relaxed">
+            <p className="text-sm text-primary/70 leading-relaxed">
               Karnataka's trusted platform for finding the right hospital. Compare costs, read reviews, and book consultations.
             </p>
             <div className="flex gap-3">
@@ -26,7 +26,7 @@ export function Footer() {
                 <a
                   key={i}
                   href="#"
-                  className="w-9 h-9 rounded-lg bg-background/10 flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                  className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center text-primary hover:bg-primary hover:text-primary-foreground transition-colors"
                 >
                   <Icon className="w-4 h-4" />
                 </a>
@@ -36,7 +36,7 @@ export function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-semibold text-background mb-4">Quick Links</h4>
+            <h4 className="font-semibold text-primary mb-4">Quick Links</h4>
             <ul className="space-y-2">
               {[
                 { label: 'Find Hospitals', href: '/search' },
@@ -48,7 +48,7 @@ export function Footer() {
                 <li key={link.href}>
                   <Link
                     to={link.href}
-                    className="text-sm text-background/70 hover:text-primary transition-colors"
+                    className="text-sm text-primary/70 hover:text-primary transition-colors"
                   >
                     {link.label}
                   </Link>
@@ -59,7 +59,7 @@ export function Footer() {
 
           {/* Surgery Types */}
           <div>
-            <h4 className="font-semibold text-background mb-4">Surgery Types</h4>
+            <h4 className="font-semibold text-primary mb-4">Surgery Types</h4>
             <ul className="space-y-2">
               {[
                 { label: 'Diagnostic Surgery', type: 'diagnostic' },
@@ -71,7 +71,7 @@ export function Footer() {
                 <li key={item.type}>
                   <Link
                     to={`/search?surgeryType=${item.type}`}
-                    className="text-sm text-background/70 hover:text-primary transition-colors"
+                    className="text-sm text-primary/70 hover:text-primary transition-colors"
                   >
                     {item.label}
                   </Link>
@@ -82,23 +82,23 @@ export function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-semibold text-background mb-4">Contact Us</h4>
+            <h4 className="font-semibold text-primary mb-4">Contact Us</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                <span className="text-sm text-background/70">
+                <span className="text-sm text-primary/70">
                   123 Healthcare Avenue, Bengaluru, Karnataka 560001
                 </span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-primary flex-shrink-0" />
-                <a href="tel:+918001234567" className="text-sm text-background/70 hover:text-primary transition-colors">
+                <a href="tel:+918001234567" className="text-sm text-primary/70 hover:text-primary transition-colors">
                   +91 800 123 4567
                 </a>
               </li>
               <li className="flex items-center gap-3">
                 <Mail className="w-5 h-5 text-primary flex-shrink-0" />
-                <a href="mailto:info@surgeryhub.in" className="text-sm text-background/70 hover:text-primary transition-colors">
+                <a href="mailto:info@surgeryhub.in" className="text-sm text-primary/70 hover:text-primary transition-colors">
                   info@surgeryhub.in
                 </a>
               </li>
@@ -107,15 +107,15 @@ export function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-background/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-background/50">
+        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-primary/50">
             © {currentYear} Connect Hospital. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link to="/privacy" className="text-sm text-background/50 hover:text-primary transition-colors">
+            <Link to="/privacy" className="text-sm text-primary/50 hover:text-primary transition-colors">
               Privacy Policy
             </Link>
-            <Link to="/terms" className="text-sm text-background/50 hover:text-primary transition-colors">
+            <Link to="/terms" className="text-sm text-primary/50 hover:text-primary transition-colors">
               Terms of Service
             </Link>
           </div>
