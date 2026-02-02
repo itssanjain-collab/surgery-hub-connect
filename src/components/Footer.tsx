@@ -11,13 +11,15 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center font-bold text-lg text-primary-foreground">
-                SH
-              </div>
-              <span className="font-display text-xl font-bold text-background">Surgery Hub</span>
+              <img 
+                src="/logo.jpeg" 
+                alt="Connect Hospital" 
+                className="h-10 w-10 object-contain"
+              />
+              <span className="font-display text-xl font-bold text-background">Connect Hospital</span>
             </Link>
             <p className="text-sm text-background/70 leading-relaxed">
-              Karnataka's trusted platform for finding the right surgery at the right hospital. Compare costs, read reviews, and book consultations.
+              Karnataka's trusted platform for finding the right hospital. Compare costs, read reviews, and book consultations.
             </p>
             <div className="flex gap-3">
               {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
@@ -107,7 +109,7 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-12 pt-8 border-t border-background/10 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-background/50">
-            © {currentYear} Surgery Hub. All rights reserved.
+            © {currentYear} Connect Hospital. All rights reserved.
           </p>
           <div className="flex gap-6">
             <Link to="/privacy" className="text-sm text-background/50 hover:text-primary transition-colors">

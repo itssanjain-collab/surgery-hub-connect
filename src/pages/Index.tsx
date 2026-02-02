@@ -52,7 +52,7 @@ const Index = () => {
         <section className="py-16 md:py-24">
           <div className="container">
             <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Why Choose Surgery Hub?</h2>
+              <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Why Choose Connect Hospital?</h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">Simple, transparent, and trustworthy healthcare discovery.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
@@ -70,7 +70,7 @@ const Index = () => {
           <div className="container">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl md:text-4xl font-bold text-card mb-6">Are You a Hospital Administrator?</h2>
-              <p className="text-lg text-card/80 mb-8">Join Surgery Hub to list your hospital and reach more patients across Karnataka.</p>
+              <p className="text-lg text-card/80 mb-8">Join Connect Hospital to list your hospital and reach more patients across Karnataka.</p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button asChild size="lg" variant="hero"><Link to="/hospital-register">Register Your Hospital</Link></Button>
                 <Button asChild size="lg" variant="outline-card"><Link to="/dashboard">Hospital Login</Link></Button>
