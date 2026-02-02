@@ -11,9 +11,11 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center font-bold text-lg text-primary-foreground">
-                CH
-              </div>
+              <img 
+                src="/logo.jpeg" 
+                alt="Connect Hospital" 
+                className="h-10 w-10 object-contain"
+              />
               <span className="font-display text-xl font-bold text-background">Connect Hospital</span>
             </Link>
             <p className="text-sm text-background/70 leading-relaxed">
