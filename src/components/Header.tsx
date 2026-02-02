@@ -46,10 +46,7 @@ export function Header() {
               alt="Connect Hospital" 
               className="h-14 w-14 object-contain"
             />
-            <span className={cn(
-              "font-display text-xl font-bold hidden sm:block",
-              isHomePage ? "text-card" : "text-foreground"
-            )}>
+            <span className="font-display text-xl font-bold hidden sm:block text-primary">
               Connect Hospital
             </span>
           </Link>
@@ -63,11 +60,8 @@ export function Header() {
                 key={link.href}
                 to={link.href}
                 className={cn(
-                  "flex items-center gap-2 text-sm font-medium transition-colors",
-                  isHomePage 
-                    ? "text-card/80 hover:text-card" 
-                    : "text-muted-foreground hover:text-foreground",
-                  location.pathname === link.href && (isHomePage ? "text-card" : "text-primary")
+                  "flex items-center gap-2 text-sm font-medium transition-colors text-primary hover:text-primary/80",
+                  location.pathname === link.href && "text-primary font-semibold"
                 )}
               >
                 <link.icon className="w-4 h-4" />
