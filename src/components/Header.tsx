@@ -31,12 +31,7 @@ export function Header() {
   };
 
   return (
-    <header className={cn(
-      "sticky top-0 z-50 transition-all duration-normal",
-      isHomePage 
-        ? "bg-transparent" 
-        : "bg-card/95 backdrop-blur-md border-b border-border/50"
-    )}>
+    <header className="sticky top-0 z-50 transition-all duration-normal bg-card/95 backdrop-blur-md border-b border-border/50">
       <div className="container">
         <nav className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
