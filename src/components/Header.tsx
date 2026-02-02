@@ -41,17 +41,16 @@ export function Header() {
         <nav className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <div className={cn(
-              "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-lg",
-              isHomePage ? "bg-card text-primary" : "bg-primary text-primary-foreground"
-            )}>
-              SH
-            </div>
+            <img 
+              src="/logo.jpeg" 
+              alt="Connect Hospital" 
+              className="h-10 w-10 object-contain"
+            />
             <span className={cn(
               "font-display text-xl font-bold hidden sm:block",
               isHomePage ? "text-card" : "text-foreground"
             )}>
-              Surgery Hub
+              Connect Hospital
             </span>
           </Link>
 
