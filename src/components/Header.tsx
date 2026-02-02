@@ -71,9 +71,9 @@ export function Header() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
-                    variant={isHomePage ? "outline-card" : "outline"}
+                    variant="outline"
                     size="sm"
-                    className="gap-2"
+                    className="gap-2 text-primary border-primary hover:bg-primary/10"
                   >
                     <UserCircle className="w-4 h-4" />
                     <span className="max-w-[150px] truncate">{user.email}</span>
@@ -81,13 +81,13 @@ export function Header() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+                    <Link to="/profile" className="flex items-center gap-2 cursor-pointer text-primary">
                       <User className="w-4 h-4" />
                       My Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/my-bookings" className="flex items-center gap-2 cursor-pointer">
+                    <Link to="/my-bookings" className="flex items-center gap-2 cursor-pointer text-primary">
                       <CalendarDays className="w-4 h-4" />
                       My Bookings
                     </Link>
@@ -105,8 +105,9 @@ export function Header() {
             ) : (
               <>
                 <Button 
-                  variant={isHomePage ? "outline-card" : "ghost"}
+                  variant="outline"
                   size="sm"
+                  className="text-primary border-primary hover:bg-primary/10"
                   asChild
                 >
                   <Link to="/auth">
@@ -115,7 +116,7 @@ export function Header() {
                   </Link>
                 </Button>
                 <Button 
-                  variant={isHomePage ? "hero" : "default"}
+                  variant="default"
                   size="sm"
                   asChild
                 >
@@ -129,7 +130,7 @@ export function Header() {
           <Button
             variant="ghost"
             size="icon"
-            className={cn("md:hidden", isHomePage && "text-card hover:bg-card/10")}
+            className="md:hidden text-primary hover:bg-primary/10"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -148,28 +149,22 @@ export function Header() {
                   to={link.href}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    isHomePage 
-                      ? "text-card hover:bg-card/10" 
-                      : "text-foreground hover:bg-muted",
-                    location.pathname === link.href && "bg-primary/10 text-primary"
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-primary hover:bg-primary/10",
+                    location.pathname === link.href && "bg-primary/10 font-semibold"
                   )}
                 >
                   <link.icon className="w-5 h-5" />
                   {link.label}
                 </Link>
               ))}
-              <hr className={cn("my-3", isHomePage ? "border-card/20" : "border-border")} />
+              <hr className="my-3 border-border" />
               {user && (
                 <Link
                   to="/profile"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    isHomePage 
-                      ? "text-card hover:bg-card/10" 
-                      : "text-foreground hover:bg-muted",
-                    location.pathname === '/profile' && "bg-primary/10 text-primary"
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors text-primary hover:bg-primary/10",
+                    location.pathname === '/profile' && "bg-primary/10 font-semibold"
                   )}
                 >
                   <User className="w-5 h-5" />
@@ -178,13 +173,13 @@ export function Header() {
               )}
               <div className="flex gap-2 px-4 mt-2">
                 {user ? (
-                  <Button variant="outline" size="sm" className="flex-1" onClick={handleSignOut}>
+                  <Button variant="outline" size="sm" className="flex-1 text-primary border-primary hover:bg-primary/10" onClick={handleSignOut}>
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </Button>
                 ) : (
                   <>
-                    <Button variant="outline" size="sm" className="flex-1" asChild>
+                    <Button variant="outline" size="sm" className="flex-1 text-primary border-primary hover:bg-primary/10" asChild>
                       <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
                     </Button>
                     <Button size="sm" className="flex-1" asChild>
