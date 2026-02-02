@@ -8,10 +8,11 @@ import { HospitalMap } from '@/components/HospitalMap';
 import { FilterDrawer } from '@/components/FilterDrawer';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { mockHospitals } from '@/data/mockData';
-import { SearchFilters, SURGERY_TYPES, SurgeryType } from '@/types';
+import { SearchFilters, SURGERY_TYPES, SurgeryType, Hospital } from '@/types';
 import { Button } from '@/components/ui/button';
 import { ArrowUpDown, LayoutGrid, List, MapPin, X, Map } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { calculateDistance } from '@/lib/distance';
 
 const sortOptions = [
   { value: 'best_match', label: 'Best Match' },
@@ -51,9 +52,25 @@ export default function SearchPage() {
     }
   }, [urlLat, urlLng]);
 
-  // Simulate filtering
+  // Calculate distances and add to hospitals
+  const hospitalsWithDistance = useMemo(() => {
+    return mockHospitals.map(hospital => {
+      if (userLocation && hospital.coordinates) {
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          hospital.coordinates.lat,
+          hospital.coordinates.lng
+        );
+        return { ...hospital, distance };
+      }
+      return hospital;
+    });
+  }, [userLocation]);
+
+  // Filter and sort hospitals
   const filteredHospitals = useMemo(() => {
-    let results = [...mockHospitals];
+    let results = [...hospitalsWithDistance];
 
     if (filters.query) {
       const query = filters.query.toLowerCase();
@@ -92,7 +109,7 @@ export default function SearchPage() {
     }
 
     return results;
-  }, [filters]);
+  }, [filters, hospitalsWithDistance]);
 
   const handleSearch = () => {
     setIsLoading(true);
