@@ -162,7 +162,7 @@ serve(async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Surgery Hub <onboarding@resend.dev>",
+        from: `${hospitalName} <onboarding@resend.dev>`,
         to: [patientEmail],
         subject: subject,
         html: emailHtml,
