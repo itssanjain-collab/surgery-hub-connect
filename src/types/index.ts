@@ -53,6 +53,7 @@ export interface Surgery {
 export interface Doctor {
   id: string;
   name: string;
+  email?: string;
   photoUrl: string;
   specialization: string;
   qualification: string;

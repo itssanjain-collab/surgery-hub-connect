@@ -182,6 +182,7 @@ export function BookingModal({ isOpen, onClose, hospital, doctor, surgery, booki
           patientEmail,
           hospitalName: hospital.name,
           doctorName: selectedDoctor?.name,
+          doctorEmail: selectedDoctor?.email,
           surgeryName: surgery?.name,
           bookingType,
           scheduledDate: format(selectedDate, 'yyyy-MM-dd'),
