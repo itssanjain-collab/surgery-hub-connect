@@ -45,6 +45,7 @@ export default function Dashboard() {
   const [isAddDoctorModalOpen, setIsAddDoctorModalOpen] = useState(false);
   const [newDoctor, setNewDoctor] = useState({
     name: '',
+    email: '',
     specialization: '',
     qualification: '',
     experience: '',
@@ -128,6 +129,7 @@ export default function Dashboard() {
       setDoctors([...doctors, {
         id: `d${doctors.length + 1}`,
         name: newDoctor.name,
+        email: newDoctor.email || undefined,
         photoUrl: newDoctorPhoto || 'https://images.unsplash.com/photo-1612349317150-e413f6a5b16d?w=150&h=150&fit=crop',
         specialization: newDoctor.specialization,
         qualification: newDoctor.qualification || 'MBBS',
@@ -138,7 +140,7 @@ export default function Dashboard() {
         availability: availabilityDays,
         bio: newDoctor.bio
       }]);
-      setNewDoctor({ name: '', specialization: '', qualification: '', experience: '', consultationFee: '', bio: '' });
+      setNewDoctor({ name: '', email: '', specialization: '', qualification: '', experience: '', consultationFee: '', bio: '' });
       setNewDoctorPhoto(null);
       setNewDoctorAvailability({
         Mon: ['morning', 'afternoon'],
@@ -851,6 +853,17 @@ export default function Dashboard() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="edit-doctor-email">Email</Label>
+                  <Input
+                    id="edit-doctor-email"
+                    type="email"
+                    placeholder="doctor@hospital.com"
+                    value={editingDoctor.email || ''}
+                    onChange={(e) => setEditingDoctor({ ...editingDoctor, email: e.target.value })}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="edit-doctor-specialization">Specialization</Label>
                   <Input
                     id="edit-doctor-specialization"
@@ -1033,6 +1046,17 @@ export default function Dashboard() {
                   placeholder="e.g., Dr. Rajesh Kumar"
                   value={newDoctor.name}
                   onChange={(e) => setNewDoctor({ ...newDoctor, name: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label htmlFor="add-doctor-email">Email</Label>
+                <Input
+                  id="add-doctor-email"
+                  type="email"
+                  placeholder="e.g., doctor@hospital.com"
+                  value={newDoctor.email}
+                  onChange={(e) => setNewDoctor({ ...newDoctor, email: e.target.value })}
                   className="mt-1"
                 />
               </div>
